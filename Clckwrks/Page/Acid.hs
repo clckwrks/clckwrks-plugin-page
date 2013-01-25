@@ -15,8 +15,8 @@ module Clckwrks.Page.Acid
     , GetFeedConfig(..)
     , SetFeedConfig(..)
     , GetBlogTitle(..)
-    , GetUACCT(..)
-    , SetUACCT(..)
+    , GetOldUACCT(..)
+    , ClearOldUACCT(..)
     ) where
 
 import Clckwrks.Page.Types  (Markup(..), PublishStatus(..), PreProcessor(..), PageId(..), PageKind(..), Page(..), Pages(..), FeedConfig(..), Slug(..), initialFeedConfig, slugify)
@@ -39,8 +39,6 @@ import           Data.UUID  (UUID)
 import qualified Data.UUID  as UUID
 import Happstack.Auth       (UserId(..))
 import HSP.Google.Analytics (UACCT)
-
-$(deriveSafeCopy 0 'base ''UACCT)
 
 data PageState_001  = PageState_001
     { nextPageId_001 :: PageId
@@ -184,12 +182,15 @@ allPosts =
        return $ toDescList (Proxy :: Proxy UTCTime) (pgs @= Post @= Published)
 
 -- | get the 'UACCT' for Google Analytics
-getUACCT :: Query PageState (Maybe UACCT)
-getUACCT = uacct <$> ask
+--
+-- DEPRECATED: moved to clckwrks / 'CoreState'
+getOldUACCT :: Query PageState (Maybe UACCT)
+getOldUACCT = uacct <$> ask
 
--- | set the 'UACCT' for Google Analytics
-setUACCT :: Maybe UACCT -> Update PageState ()
-setUACCT mua = modify $ \ps -> ps { uacct = mua }
+-- | zero out the UACCT code in 'PageState'. It belongs in 'CoreState'
+-- now.
+clearOldUACCT :: Update PageState ()
+clearOldUACCT = modify $ \ps -> ps { uacct = Nothing }
 
 $(makeAcidic ''PageState
   [ 'newPage
@@ -202,6 +203,6 @@ $(makeAcidic ''PageState
   , 'getFeedConfig
   , 'setFeedConfig
   , 'getBlogTitle
-  , 'getUACCT
-  , 'setUACCT
+  , 'getOldUACCT
+  , 'clearOldUACCT
   ])

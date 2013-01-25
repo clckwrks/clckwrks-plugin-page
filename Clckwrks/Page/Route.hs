@@ -80,7 +80,9 @@ routePage url' =
               mTheme <- getTheme p
               case mTheme of
                 Nothing -> escape $ internalServerError $ toResponse $ ("No theme package is loaded." :: Text)
-                (Just theme) -> internalServerError $ toResponse ("Theme flattening not supported yet." :: Text)
+                (Just theme) ->
+                    do xml <- clckT2PageT (unXMLGenT $ themeBlog theme)
+                       ok $ toResponse xml
 
          AtomFeed ->
              do handleAtomFeed

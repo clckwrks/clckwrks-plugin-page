@@ -2,9 +2,11 @@
 module Clckwrks.Page.Plugin where
 
 import Clckwrks                  ( ClckwrksConfig(clckTopDir), ClckState(plugins), ClckT(..), ClckURL, ClckPlugins, Theme
-                                 , addAdminMenu, addPreProc                                 )
+                                 , addAdminMenu, addPreProc, query, update
+                                 )
+import Clckwrks.Acid             (GetUACCT(..), SetUACCT(..))
 import Clckwrks.Plugin           (clckPlugin)
-import Clckwrks.Page.Acid        (initialPageState)
+import Clckwrks.Page.Acid        (PageState, GetOldUACCT(..), ClearOldUACCT(..), initialPageState)
 import Clckwrks.Page.Monad       (PageConfig(..), runPageT)
 import Clckwrks.Page.PreProcess  (pageCmd)
 import Clckwrks.Page.Route       (routePage)
@@ -12,8 +14,9 @@ import Clckwrks.Page.URL         (PageURL(..), PageAdminURL(..))
 import Clckwrks.Page.Types       (PageId(..))
 import Control.Applicative       ((<$>))
 import Control.Monad.State       (get)
-import Data.Acid                 as Acid
-import Data.Acid.Local           (createCheckpointAndClose, openLocalStateFrom)
+import Data.Acid                 (AcidState)
+import Data.Acid.Advanced        (update', query')
+import Data.Acid.Local           (createCheckpointAndClose, openLocalStateFrom,)
 import Data.Text                 (Text)
 import qualified Data.Text.Lazy  as TL
 import Data.Maybe                (fromMaybe)
@@ -75,6 +78,17 @@ addPageAdminMenu =
                       , ("Edit Feed Config", feedConfigURL)
                       ]
                     )
+
+migrateUACCT :: AcidState PageState -> ClckT url IO ()
+migrateUACCT acidPageState =
+    do mOldUACCT <- query' acidPageState GetOldUACCT
+       case mOldUACCT of
+         Nothing -> return ()
+         (Just uacct) ->
+             do mNewUACCT <- query GetUACCT
+                case mNewUACCT of
+                  Nothing -> update (SetUACCT $ Just uacct)
+                  (Just _) -> update' acidPageState ClearOldUACCT
 
 pagePlugin :: Plugin PageURL Theme (ClckT ClckURL (ServerPartT IO) Response) (ClckT ClckURL IO ()) ClckwrksConfig [TL.Text -> ClckT ClckURL IO TL.Text]
 pagePlugin = Plugin

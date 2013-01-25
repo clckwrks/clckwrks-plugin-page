@@ -114,7 +114,8 @@ markupToContent :: (Functor m, MonadIO m, Happstack m) =>
 markupToContent Markup{..} =
     do clckState <- get
        transformers <- liftIO $ getPluginsSt (plugins clckState)
-       (markup', clckState') <- liftIO $ runClckT undefined clckState (foldM (\txt pp -> pp txt) (TL.fromStrict markup) transformers)
+       (Just clckRouteFn) <- getPluginRouteFn (plugins clckState) (pluginName clckPlugin)
+       (markup', clckState') <- liftIO $ runClckT clckRouteFn clckState (foldM (\txt pp -> pp txt) (TL.fromStrict markup) transformers)
        put clckState'
        e <- liftIO $ runPreProcessors preProcessors trust (TL.toStrict markup')
        case e of
