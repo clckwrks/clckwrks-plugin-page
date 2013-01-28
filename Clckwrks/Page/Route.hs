@@ -2,7 +2,7 @@
 module Clckwrks.Page.Route where
 
 import Clckwrks                     (Role(..), requiresRole_)
-import Clckwrks.Monad               ( ClckState(plugins), Theme(themeBlog), query
+import Clckwrks.Monad               ( ClckState(plugins), query
                                     , update, setUnique, themeTemplate, nestURL
                                     )
 import Clckwrks.Page.Types          (Page(..), PageId(..), toSlug)
@@ -15,6 +15,7 @@ import Clckwrks.Page.Admin.PreviewPage (previewPage)
 import Clckwrks.Page.Atom           (handleAtomFeed)
 import Clckwrks.Page.Monad          (PageConfig(pageClckURL), PageM, clckT2PageT, markupToContent)
 import Clckwrks.Page.Types          (PageKind(PlainPage, Post))
+import Clckwrks.Page.BlogPage       (blog)
 import Clckwrks.Page.URL            (PageURL(..), PageAdminURL(..))
 import Control.Applicative          ((<$>))
 import Control.Monad.Reader         (ask)
@@ -75,14 +76,7 @@ routePage url' =
                          clckT2PageT $ themeTemplate (plugins cs) ttl () bdy
                  else do notFound $ toResponse ("Invalid PageId " ++ show (unPageId pid))
 
-         (Blog) ->
-           do p <- plugins <$> get
-              mTheme <- getTheme p
-              case mTheme of
-                Nothing -> escape $ internalServerError $ toResponse $ ("No theme package is loaded." :: Text)
-                (Just theme) ->
-                    do xml <- clckT2PageT (unXMLGenT $ themeBlog theme)
-                       ok $ toResponse xml
+         (Blog) -> blog
 
          AtomFeed ->
              do handleAtomFeed

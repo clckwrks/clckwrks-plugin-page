@@ -25,8 +25,9 @@ library
                        Clckwrks.Page.Types
                        Clckwrks.Page.Plugin
                        Clckwrks.Page.PreProcess
---                       Clckwrks.Page.API
+                       Clckwrks.Page.API
                        Clckwrks.Page.Acid
+                       Clckwrks.Page.BlogPage
                        Clckwrks.Page.Admin.EditFeedConfig
                        Clckwrks.Page.Admin.EditPage
                        Clckwrks.Page.Admin.NewPage

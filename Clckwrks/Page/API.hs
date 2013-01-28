@@ -2,11 +2,11 @@
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
 module Clckwrks.Page.API
     ( PageId(..)
-    , getPage
-    , getPageId
-    , getPageTitle
-    , getPageTitleSlug
-    , getPageContent
+--    , getPage
+--    , getPageId
+--    , getPageTitle
+--    , getPageTitleSlug
+--    , getPageContent
     , getPagesSummary
     , getPageSummary
     , getPageMenu
@@ -16,12 +16,14 @@ module Clckwrks.Page.API
     , googleAnalytics
     ) where
 
+import Clckwrks.Acid        (GetUACCT(..))
 import Clckwrks.Monad       ( Clck, ClckT(..), ClckState(..), Content(..)
                             , getEnableAnalytics, query, update
                             )
 import Clckwrks.Page.Acid   ( PagesSummary(..), Page(..), PageById(..), PageId(..)
-                            , Slug(..), GetUACCT(..), AllPosts(..), GetBlogTitle(..))
-import Clckwrks.Page.Monad  ( markupToContent )
+                            , Slug(..), AllPosts(..), GetBlogTitle(..))
+import Clckwrks.Page.Monad  ( PageM, markupToContent )
+import Clckwrks.Page.URL    ( PageURL(ViewPageSlug))
 import Clckwrks.URL         (ClckURL(..))
 import Control.Applicative  ((<$>))
 import Control.Monad.State  (get)
@@ -34,8 +36,8 @@ import HSP                  hiding (escape)
 import HSP.Google.Analytics (analyticsAsync)
 import Text.HTML.TagSoup    ( (~==), isTagCloseName, isTagOpenName, parseTags
                             , renderTags, sections)
-
-getPage :: Clck url Page
+{-
+getPage :: PageM Page
 getPage =
     do ClckState{..} <- get
        mPage <- query (PageById currentPage)
@@ -43,26 +45,26 @@ getPage =
          Nothing -> escape $ internalServerError $ toResponse ("getPage: invalid PageId " ++ show (unPageId currentPage))
          (Just p) -> return p
 
-getPageId :: Clck url PageId
+getPageId :: PageM PageId
 getPageId = currentPage <$> get
 
-getPageTitle :: Clck url Text
+getPageTitle :: PageM Text
 getPageTitle = pageTitle <$> getPage
 
-getPageTitleSlug :: Clck url (Text, Maybe Slug)
+getPageTitleSlug :: PageM (Text, Maybe Slug)
 getPageTitleSlug =
     do p <- getPage
        return (pageTitle p, pageSlug p)
 
-getPageContent :: Clck url Content
+getPageContent :: PageM Content
 getPageContent =
     do mrkup <- pageSrc <$> getPage
        markupToContent mrkup
-
-getPagesSummary :: Clck url [(PageId, Text, Maybe Slug)]
+-}
+getPagesSummary :: PageM [(PageId, Text, Maybe Slug)]
 getPagesSummary = query PagesSummary
 
-getPageMenu :: GenXML (Clck ClckURL)
+getPageMenu :: GenXML PageM
 getPageMenu =
     do ps <- query PagesSummary
        case ps of
@@ -71,7 +73,7 @@ getPageMenu =
                 <% mapM (\(pid, ttl, slug) -> <li><a href=(ViewPageSlug pid (toSlug ttl slug)) title=ttl><% ttl %></a></li>) ps %>
               </ul>
 
-getPageSummary :: PageId -> Clck url Content
+getPageSummary :: PageId -> PageM Content
 getPageSummary pid =
     do mPage <- query (PageById pid)
        case mPage of
@@ -80,7 +82,7 @@ getPageSummary pid =
          (Just pge) ->
              extractExcerpt pge
 
-getBlogTitle :: Clck url Text
+getBlogTitle :: PageM Text
 getBlogTitle = query GetBlogTitle
 
 extractExcerpt :: (MonadIO m, Functor m, Happstack m) =>
@@ -110,7 +112,7 @@ takeThrough f (p:ps)
     | otherwise = []
 
 -- | get all posts, sorted reverse cronological
-getPosts :: XMLGenT (Clck url) [Page]
+getPosts :: XMLGenT (PageM) [Page]
 getPosts = query AllPosts
 
 -- | create a google analytics tracking code block
@@ -120,7 +122,7 @@ getPosts = query AllPosts
 --  * the 'enableAnalytics' field in 'ClckState' is 'False'
 --
 --  * the 'uacct' field in 'PageState' is 'Nothing'
-googleAnalytics :: XMLGenT (Clck url) XML
+googleAnalytics :: XMLGenT (PageM) XML
 googleAnalytics =
     do enabled <- getEnableAnalytics
        case enabled of
