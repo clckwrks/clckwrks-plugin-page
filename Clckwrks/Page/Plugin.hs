@@ -2,7 +2,7 @@
 module Clckwrks.Page.Plugin where
 
 import Clckwrks                  ( ClckwrksConfig(clckTopDir), ClckState(plugins), ClckT(..), ClckURL, ClckPlugins, Theme
-                                 , addAdminMenu, addPreProc, query, update
+                                 , Role(..), addAdminMenu, addPreProc, query, update
                                  )
 import Clckwrks.Acid             (GetUACCT(..), SetUACCT(..))
 import Clckwrks.Plugin           (clckPlugin)
@@ -21,6 +21,7 @@ import Data.Text                 (Text)
 import qualified Data.Text.Lazy  as TL
 import Data.Maybe                (fromMaybe)
 import Data.Set                  (Set)
+import qualified Data.Set        as Set
 import Happstack.Server          (ServerPartT, Response, notFound, toResponse)
 import System.Directory          (createDirectoryIfMissing)
 import System.FilePath           ((</>))
@@ -73,9 +74,9 @@ addPageAdminMenu =
            pagesURL      = pageShowURL (PageAdmin Pages) []
            feedConfigURL = pageShowURL (PageAdmin EditFeedConfig) []
        addAdminMenu ("Pages/Posts"
-                    , [ ("New Page/Post"        , newPageURL)
-                      , ("Edit Page/Post"  , pagesURL)
-                      , ("Edit Feed Config", feedConfigURL)
+                    , [ (Set.fromList [Administrator, Editor], "New Page/Post"   , newPageURL)
+                      , (Set.fromList [Administrator, Editor], "Edit Page/Post"  , pagesURL)
+                      , (Set.fromList [Administrator, Editor], "Edit Feed Config", feedConfigURL)
                       ]
                     )
 
