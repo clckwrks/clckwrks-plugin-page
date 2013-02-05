@@ -8,7 +8,7 @@ import Control.Monad.State           (StateT, put, get, modify)
 import Control.Monad.Trans           (MonadIO(liftIO))
 import qualified Data.Text.Lazy      as LT
 import Clckwrks.Acid                 (GetAcidState(..))
-import Clckwrks.Monad                (Content(..), ClckT(..), ClckFormT, ClckState(..), mapClckT, runClckT, withRouteClckT)
+import Clckwrks.Monad                (Content(..), ClckT(..), ClckFormT, ClckState(..), ClckPluginsSt(..), mapClckT, runClckT, withRouteClckT, getPreProcessors)
 import Clckwrks.URL                  (ClckURL)
 import Clckwrks.Page.Acid            (PageState(..))
 import Clckwrks.Page.Types           (Markup(..), runPreProcessors)
@@ -113,7 +113,7 @@ markupToContent :: (Functor m, MonadIO m, Happstack m) =>
                 -> ClckT url m Content
 markupToContent Markup{..} =
     do clckState <- get
-       transformers <- liftIO $ getPluginsSt (plugins clckState)
+       transformers <- getPreProcessors (plugins clckState)
        (Just clckRouteFn) <- getPluginRouteFn (plugins clckState) (pluginName clckPlugin)
        (markup', clckState') <- liftIO $ runClckT clckRouteFn clckState (foldM (\txt pp -> pp txt) (TL.fromStrict markup) transformers)
        put clckState'

@@ -23,6 +23,7 @@ library
   exposed-modules:     Clckwrks.Page.Monad
                        Clckwrks.Page.Route
                        Clckwrks.Page.Types
+                       Clckwrks.Page.MenuCallback
                        Clckwrks.Page.Plugin
                        Clckwrks.Page.PreProcess
                        Clckwrks.Page.API

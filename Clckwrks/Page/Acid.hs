@@ -12,6 +12,7 @@ module Clckwrks.Page.Acid
     , PagesSummary(..)
     , UpdatePage(..)
     , AllPosts(..)
+    , AllPublishedPages(..)
     , GetFeedConfig(..)
     , SetFeedConfig(..)
     , GetBlogTitle(..)
@@ -181,6 +182,12 @@ allPosts =
     do pgs <- pages <$> ask
        return $ toDescList (Proxy :: Proxy UTCTime) (pgs @= Post @= Published)
 
+-- | get all 'Published' pages, sorted in no particular order
+allPublishedPages :: Query PageState [Page]
+allPublishedPages =
+    do pgs <- pages <$> ask
+       return $ toList (pgs @= PlainPage @= Published)
+
 -- | get the 'UACCT' for Google Analytics
 --
 -- DEPRECATED: moved to clckwrks / 'CoreState'
@@ -200,6 +207,7 @@ $(makeAcidic ''PageState
   , 'pagesSummary
   , 'updatePage
   , 'allPosts
+  , 'allPublishedPages
   , 'getFeedConfig
   , 'setFeedConfig
   , 'getBlogTitle
