@@ -16,6 +16,7 @@ module Clckwrks.Page.API
     , googleAnalytics
     ) where
 
+import Clckwrks             ( UserId )
 import Clckwrks.Acid        (GetUACCT(..))
 import Clckwrks.Monad       ( Clck, ClckT(..), ClckState(..), Content(..)
                             , getEnableAnalytics, query, update
@@ -23,12 +24,14 @@ import Clckwrks.Monad       ( Clck, ClckT(..), ClckState(..), Content(..)
 import Clckwrks.Page.Acid   ( PagesSummary(..), Page(..), PageById(..), PageId(..)
                             , Slug(..), AllPosts(..), GetBlogTitle(..))
 import Clckwrks.Page.Monad  ( PageM, markupToContent )
+import Clckwrks.Page.Types  ( PublishStatus )
 import Clckwrks.Page.URL    ( PageURL(ViewPageSlug))
 import Clckwrks.URL         (ClckURL(..))
 import Control.Applicative  ((<$>))
 import Control.Monad.State  (get)
 import Control.Monad.Trans  (MonadIO)
 import Data.Text            (Text)
+import Data.Time            (UTCTime)
 import qualified Data.Text  as Text
 import Clckwrks.Page.Types  (toSlug)
 import Happstack.Server     (Happstack, escape, internalServerError, toResponse)
@@ -61,7 +64,7 @@ getPageContent =
     do mrkup <- pageSrc <$> getPage
        markupToContent mrkup
 -}
-getPagesSummary :: PageM [(PageId, Text, Maybe Slug)]
+getPagesSummary :: PageM [(PageId, Text, Maybe Slug, UTCTime, UserId, PublishStatus)]
 getPagesSummary = query PagesSummary
 
 getPageMenu :: GenXML PageM
@@ -70,7 +73,7 @@ getPageMenu =
        case ps of
          [] -> <div>No pages found.</div>
          _ -> <ul class="page-menu">
-                <% mapM (\(pid, ttl, slug) -> <li><a href=(ViewPageSlug pid (toSlug ttl slug)) title=ttl><% ttl %></a></li>) ps %>
+                <% mapM (\(pid, ttl, slug,_,_,_) -> <li><a href=(ViewPageSlug pid (toSlug ttl slug)) title=ttl><% ttl %></a></li>) ps %>
               </ul>
 
 getPageSummary :: PageId -> PageM Content

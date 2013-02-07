@@ -124,10 +124,11 @@ isPublishedPage pid =
          Nothing     -> return False
          (Just page) -> return $ pageStatus page == Published
 
-pagesSummary :: Query PageState [(PageId, Text, Maybe Slug)]
+pagesSummary :: Query PageState [(PageId, Text, Maybe Slug, UTCTime, UserId, PublishStatus)]
 pagesSummary =
     do pgs <- pages <$> ask
-       return $ map (\page -> (pageId page, pageTitle page, pageSlug page)) (toList pgs)
+       return $ map (\page -> (pageId page, pageTitle page, pageSlug page, pageUpdated page, pageAuthor page, pageStatus page))
+                  (toList pgs)
 
 updatePage :: Page -> Update PageState (Maybe String)
 updatePage page =

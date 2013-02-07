@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, FlexibleInstances, TemplateHaskell, TypeFamilies #-}
+{-# LANGUAGE DeriveDataTypeable, FlexibleInstances, TemplateHaskell, TypeFamilies, OverloadedStrings #-}
 module Clckwrks.Page.Types where
 
 import Clckwrks.Markup.HsColour (hscolour)
@@ -12,7 +12,7 @@ import Data.Data                (Data, Typeable)
 import Data.Maybe               (fromMaybe)
 import Data.IxSet               (Indexable(..), IxSet, ixFun, ixSet)
 import Data.SafeCopy            (Migrate(..), base, deriveSafeCopy, extension)
-import Data.String              (fromString)
+import Data.String              (IsString, fromString)
 import Data.Text                (Text)
 import qualified Data.Text      as Text
 import Data.Time                (UTCTime)
@@ -88,6 +88,13 @@ data PublishStatus
     | Scheduled
       deriving (Eq, Ord, Read, Show, Data, Typeable)
 $(deriveSafeCopy 1 'base ''PublishStatus)
+
+publishStatusString :: PublishStatus -> String
+publishStatusString Draft     = "draft"
+publishStatusString Revoked   = "revoked"
+publishStatusString Published = "published"
+publishStatusString Scheduled = "scheduled"
+
 
 data PageKind
     = PlainPage

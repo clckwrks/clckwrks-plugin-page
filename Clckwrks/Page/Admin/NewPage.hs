@@ -15,11 +15,11 @@ newPage pageKind =
     do method GET
        template "Create New Page/Post" () $
          <%>
-          <form action=(PageAdmin URL.NewPage) method="POST" enctype="multipart/form-data">
-           <button type="submit">Create New Page</button>
+          <form class="form-inline" action=(PageAdmin URL.NewPage) method="POST" enctype="multipart/form-data">
+           <button class="btn" type="submit">Create New Page</button>
           </form>
-          <form action=(PageAdmin URL.NewPost) method="POST" enctype="multipart/form-data">
-           <button type="submit">Create New Post</button>
+          <form class="form-inline" action=(PageAdmin URL.NewPost) method="POST" enctype="multipart/form-data">
+           <button class="btn" type="submit">Create New Post</button>
           </form>
          </%>
 

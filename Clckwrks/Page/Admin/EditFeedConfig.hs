@@ -35,14 +35,19 @@ editFeedConfig here =
 
 feedConfigForm :: FeedConfig -> PageForm FeedConfig
 feedConfigForm fc@FeedConfig{..} =
-    fieldset $
-     ol $
-      ((,) <$> (li $ label "Feed Title:")          ++> (li $ inputText feedTitle)
-           <*> (li $ label "Default Author Name:") ++> (li $ inputText feedAuthorName)
-           <* inputSubmit (pack "update")
-      )
+    divHorizontal $
+      fieldset $
+        ((,) <$> (divControlGroup (label' "Feed Title"          ++> (divControls $ inputText feedTitle)))
+             <*> (divControlGroup (label' "Default Author Name" ++> (divControls $ inputText feedAuthorName)))
+              <* (divControlGroup (divControls $ (inputSubmit (pack "Update") `setAttrs`[("class" := "btn")])))
+        )
      `transformEither` toFeedConfig
     where
+      label' str      = (label str `setAttrs` [("class":="control-label")])
+      divHorizontal   = mapView (\xml -> [<div class="form-horizontal"><% xml %></div>])
+      divControlGroup = mapView (\xml -> [<div class="control-group"><% xml %></div>])
+      divControls     = mapView (\xml -> [<div class="controls"><% xml %></div>])
+
       toFeedConfig :: (Text, Text) -> Either PageFormError FeedConfig
       toFeedConfig (ttl, athr) =
               Right $ fc { feedTitle      = ttl
