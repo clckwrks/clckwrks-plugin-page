@@ -50,7 +50,7 @@ pageFormlet page =
     divHorizontal $
       (fieldset $
         (,,,,,)
-                <$> (divControlGroup (label' "Page Type"            ++> (divControls $ select [(PlainPage, "page"), (Post, "post")] (== (pageKind page)))))
+                <$> (divControlGroup (label' "Page Type"       ++> (divControls $ select [(PlainPage, "page"), (Post, "post")] (== (pageKind page)))))
                 <*> (divControlGroup (label' "Title"           ++> (divControls $ inputText (pageTitle page) `setAttrs` [("size" := "80"), ("class" := "input-xxlarge")])))
                 <*> (divControlGroup (label' "Slug (optional)" ++> (divControls $ inputText (maybe Text.empty unSlug $ pageSlug page) `setAttrs` [("size" := "80"), ("class" := "input-xxlarge")])))
                 <*> (divControlGroup (divControls (inputCheckboxLabel "Highlight Haskell code using HsColour" hsColour)))
