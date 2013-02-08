@@ -27,7 +27,7 @@ import Happstack.Server           (ServerPartT, Response, notFound, toResponse)
 import System.Directory           (createDirectoryIfMissing)
 import System.FilePath            ((</>))
 import Web.Routes                 (toPathInfo, parseSegments, withRouteT, fromPathSegments)
-import Web.Plugins.Core           (Plugin(..), Plugins(..), When(..), addCleanup, addHandler, initPlugin, getConfig, getPluginRouteFn)
+import Web.Plugins.Core           (Plugin(..), Plugins(..), When(..), addCleanup, addHandler, addPostHook, initPlugin, getConfig, getPluginRouteFn)
 
 pageHandler :: (PageURL -> [(Text, Maybe Text)] -> Text)
               -> PageConfig
@@ -44,7 +44,7 @@ pageHandler showPageURL pageConfig plugins paths =
       flattenURL _ u p = showPageURL u p
 
 pageInit :: ClckPlugins
-           -> IO (Maybe Text)
+         -> IO (Maybe Text)
 pageInit plugins =
     do (Just pageShowFn) <- getPluginRouteFn plugins (pluginName pagePlugin)
        (Just clckShowFn) <- getPluginRouteFn plugins (pluginName clckPlugin)
@@ -65,6 +65,7 @@ pageInit plugins =
        addPreProc plugins (pageCmd acid pageShowFn)
        addMenuCallback plugins (menuCallback acid pageShowFn)
        addHandler plugins (pluginName pagePlugin) (pageHandler pageShowFn pageConfig)
+       addPostHook plugins (migrateUACCT acid)
 
        return Nothing
 
@@ -97,7 +98,7 @@ pagePlugin :: Plugin PageURL Theme (ClckT ClckURL (ServerPartT IO) Response) (Cl
 pagePlugin = Plugin
     { pluginName       = "page"
     , pluginInit       = pageInit
-    , pluginDepends    = []
+    , pluginDepends    = ["clck"]
     , pluginToPathInfo = toPathInfo
     , pluginPostHook   = addPageAdminMenu
     }
