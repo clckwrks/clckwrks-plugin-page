@@ -23,7 +23,7 @@ library
   exposed-modules:     Clckwrks.Page.Monad
                        Clckwrks.Page.Route
                        Clckwrks.Page.Types
-                       Clckwrks.Page.MenuCallback
+                       Clckwrks.Page.NavBarCallback
                        Clckwrks.Page.Plugin
                        Clckwrks.Page.PreProcess
                        Clckwrks.Page.API
@@ -41,7 +41,7 @@ library
                        text ==0.11.*,
                        clckwrks ==0.15.*,
                        acid-state ==0.8.*,
-                       happstack-server ==7.0.*,
+                       happstack-server >= 7.0 && < 7.2,
                        hsp ==0.7.*,
                        reform ==0.1.*,
                        web-plugins ==0.2.*,

@@ -1,33 +1,33 @@
 {-# LANGUAGE RecordWildCards, FlexibleContexts, OverloadedStrings #-}
 module Clckwrks.Page.Plugin where
 
-import Clckwrks                   ( ClckwrksConfig(clckTopDir), ClckState(plugins), ClckT(..), ClckURL, ClckPlugins, Theme
-                                  , Role(..), ClckPluginsSt, addAdminMenu, addMenuCallback, addPreProc, query, update
-                                  )
-import Clckwrks.Acid              (GetUACCT(..), SetUACCT(..))
-import Clckwrks.Plugin            (clckPlugin)
-import Clckwrks.Page.Acid         (PageState, GetOldUACCT(..), ClearOldUACCT(..), initialPageState)
-import Clckwrks.Page.MenuCallback (menuCallback)
-import Clckwrks.Page.Monad        (PageConfig(..), runPageT)
-import Clckwrks.Page.PreProcess   (pageCmd)
-import Clckwrks.Page.Route        (routePage)
-import Clckwrks.Page.URL          (PageURL(..), PageAdminURL(..))
-import Clckwrks.Page.Types        (PageId(..))
-import Control.Applicative        ((<$>))
-import Control.Monad.State        (get)
-import Data.Acid                  (AcidState)
-import Data.Acid.Advanced         (update', query')
-import Data.Acid.Local            (createCheckpointAndClose, openLocalStateFrom,)
-import Data.Text                  (Text)
-import qualified Data.Text.Lazy   as TL
-import Data.Maybe                 (fromMaybe)
-import Data.Set                   (Set)
-import qualified Data.Set         as Set
-import Happstack.Server           (ServerPartT, Response, notFound, toResponse)
-import System.Directory           (createDirectoryIfMissing)
-import System.FilePath            ((</>))
-import Web.Routes                 (toPathInfo, parseSegments, withRouteT, fromPathSegments)
-import Web.Plugins.Core           (Plugin(..), Plugins(..), When(..), addCleanup, addHandler, addPostHook, initPlugin, getConfig, getPluginRouteFn)
+import Clckwrks                     ( ClckwrksConfig(clckTopDir), ClckState(plugins), ClckT(..), ClckURL, ClckPlugins, Theme
+                                    , Role(..), ClckPluginsSt, addAdminMenu, addMenuCallback, addPreProc, query, update
+                                    )
+import Clckwrks.Acid                (GetUACCT(..), SetUACCT(..))
+import Clckwrks.Plugin              (clckPlugin)
+import Clckwrks.Page.Acid           (PageState, GetOldUACCT(..), ClearOldUACCT(..), initialPageState)
+import Clckwrks.Page.NavBarCallback (navBarCallback)
+import Clckwrks.Page.Monad          (PageConfig(..), runPageT)
+import Clckwrks.Page.PreProcess     (pageCmd)
+import Clckwrks.Page.Route          (routePage)
+import Clckwrks.Page.URL            (PageURL(..), PageAdminURL(..))
+import Clckwrks.Page.Types          (PageId(..))
+import Control.Applicative          ((<$>))
+import Control.Monad.State          (get)
+import Data.Acid                    (AcidState)
+import Data.Acid.Advanced           (update', query')
+import Data.Acid.Local              (createCheckpointAndClose, openLocalStateFrom,)
+import Data.Text                    (Text)
+import qualified Data.Text.Lazy     as TL
+import Data.Maybe                   (fromMaybe)
+import Data.Set                     (Set)
+import qualified Data.Set           as Set
+import Happstack.Server             (ServerPartT, Response, notFound, toResponse)
+import System.Directory             (createDirectoryIfMissing)
+import System.FilePath              ((</>))
+import Web.Routes                   (toPathInfo, parseSegments, withRouteT, fromPathSegments)
+import Web.Plugins.Core             (Plugin(..), Plugins(..), When(..), addCleanup, addHandler, addPostHook, initPlugin, getConfig, getPluginRouteFn)
 
 pageHandler :: (PageURL -> [(Text, Maybe Text)] -> Text)
               -> PageConfig
@@ -63,7 +63,7 @@ pageInit plugins =
                                    }
 
        addPreProc plugins (pageCmd acid pageShowFn)
-       addMenuCallback plugins (menuCallback acid pageShowFn)
+       addMenuCallback plugins (navBarCallback acid pageShowFn)
        addHandler plugins (pluginName pagePlugin) (pageHandler pageShowFn pageConfig)
        addPostHook plugins (migrateUACCT acid)
 
