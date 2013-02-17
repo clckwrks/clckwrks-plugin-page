@@ -2,7 +2,7 @@
 module Clckwrks.Page.Plugin where
 
 import Clckwrks                     ( ClckwrksConfig(clckTopDir), ClckState(plugins), ClckT(..), ClckURL, ClckPlugins, Theme
-                                    , Role(..), ClckPluginsSt, addAdminMenu, addMenuCallback, addPreProc, query, update
+                                    , Role(..), ClckPluginsSt, addAdminMenu, addNavBarCallback, addPreProc, query, update
                                     )
 import Clckwrks.Acid                (GetUACCT(..), SetUACCT(..))
 import Clckwrks.Plugin              (clckPlugin)
@@ -63,7 +63,7 @@ pageInit plugins =
                                    }
 
        addPreProc plugins (pageCmd acid pageShowFn)
-       addMenuCallback plugins (navBarCallback acid pageShowFn)
+       addNavBarCallback plugins (navBarCallback acid pageShowFn)
        addHandler plugins (pluginName pagePlugin) (pageHandler pageShowFn pageConfig)
        addPostHook plugins (migrateUACCT acid)
 
