@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, TemplateHaskell, TypeFamilies, RecordWildCards, OverloadedStrings #-}
+{-# LANGUAGE DeriveDataTypeable, TemplateHaskell, TypeFamilies, RecordWildCards, OverloadedStrings, QuasiQuotes #-}
 module Clckwrks.Page.Acid
     ( module Clckwrks.Page.Types
       -- * state
@@ -21,6 +21,7 @@ module Clckwrks.Page.Acid
     ) where
 
 import Clckwrks.Page.Types  (Markup(..), PublishStatus(..), PreProcessor(..), PageId(..), PageKind(..), Page(..), Pages(..), FeedConfig(..), Slug(..), initialFeedConfig, slugify)
+import Clckwrks.Page.Verbatim (verbatimText)
 import Clckwrks.Types       (Trust(..))
 import Control.Applicative  ((<$>))
 import Control.Monad.Reader (ask)
@@ -79,17 +80,47 @@ instance Migrate PageState where
     migrate (PageState_002 npi pgs fc) =
         PageState npi pgs fc Nothing
 
+initialPageMarkup :: Text
+initialPageMarkup = [verbatimText|Congratulations! You are now running clckwrks! There are a few more steps you will want to take now.
+
+Create an Account
+-----------------
+
+Go [here](/clck/auth/auth/create) and create an account for yourself.
+
+Give yourself Administrator permissions
+-------------------------------
+
+After you create an account you will want to give yourself `Administrator` privileges. This can be done using the `clckwrks-cli` tool. *While the server is running* invoke `clckwrks-cli` and point it to the socket file:
+
+    $ clckwrks-cli _state/profileData_socket
+
+that should start an interactive session. If the server is running as `root`, then you may need to add a `sudo` in front. 
+
+Assuming you are `UserId 1` you can now give yourself admin access:
+
+    % user add-role 1 Administrator
+
+You can run `help` for a list of other commands. Type `quit` to exit.
+
+Explore the Admin console
+-------------------------
+
+Now you can explore the [Admin Console](/clck/admin/console).
+
+|]
+
 initialPageState :: IO PageState
 initialPageState =
     do fc <- initialFeedConfig
        return $ PageState { nextPageId = PageId 2
                           , pages = fromList [ Page { pageId        = PageId 1
                                                     , pageAuthor    = UserId 1
-                                                    , pageTitle     = "This title rocks!"
-                                                    , pageSlug      = Just $ slugify "This title rocks!"
+                                                    , pageTitle     = "Welcome To clckwrks!"
+                                                    , pageSlug      = Just $ slugify "Welcome to clckwrks"
                                                     , pageSrc       = Markup { preProcessors = [ Markdown ]
                                                                              , trust         = Trusted
-                                                                             , markup        = "This is the body!"
+                                                                             , markup        = initialPageMarkup
                                                                              }
                                                     , pageExcerpt   = Nothing
                                                     , pageDate      = posixSecondsToUTCTime 1334089928
