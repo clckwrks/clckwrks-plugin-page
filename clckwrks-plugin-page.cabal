@@ -1,5 +1,5 @@
 name:                clckwrks-plugin-page
-version:             0.1.3
+version:             0.1.4
 synopsis:            support for CMS/Blogging in clckwrks
 homepage:            http://www.clckwrks.com/
 license:             BSD3
@@ -44,7 +44,7 @@ library
                        attoparsec             == 0.10.*,
                        clckwrks               == 0.16.*,
                        containers             >= 0.4 && < 0.6,
-                       directory              == 1.2.*,
+                       directory              >= 1.1 && < 1.3,
                        filepath               == 1.3.*,
                        happstack-authenticate == 0.10.*,
                        happstack-hsp          == 7.1.*,
