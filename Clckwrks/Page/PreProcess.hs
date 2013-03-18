@@ -3,7 +3,7 @@
 module Clckwrks.Page.PreProcess where
 
 import Control.Monad.Trans (MonadIO(..))
-import Control.Applicative ((<*>), (*>), (<$>), (<|>), optional)
+import Control.Applicative ((<*>), (*>), (<$>), (<|>), optional, pure)
 import Clckwrks.Monad (ClckT, ClckState, transform, query, segments)
 import Clckwrks.Page.Acid (GetPageTitle(..), PageState)
 import Clckwrks.Page.URL   (PageURL(ViewPageSlug))
@@ -40,14 +40,20 @@ qtext :: Parser Text
 qtext = pack <$> (char '"' *> manyTill qchar (try $ char '"'))
 
 data PageCmd
-    = LinkPage PageId (Maybe Text)
+    = PageLink PageId (Maybe Text) Bool
+    | PageTitle PageId
       deriving (Eq, Ord, Show)
 
-pageId :: Parser PageCmd
-pageId = LinkPage <$> (parseAttr (fromString "id") *> (PageId <$> decimal)) <*> (optional $ parseAttr (fromString "title") *> qtext)
-
 parseCmd :: Parser PageCmd
-parseCmd = pageId
+parseCmd =
+    do pid      <- parseAttr (fromString "id") *> (PageId <$> decimal)
+       linkOnly <- skipMany space >> stringCI "title-only"
+       return $ PageTitle pid
+    <|>
+    do pid      <- parseAttr (fromString "id") *> (PageId <$> decimal)
+       mTitle   <- optional $ parseAttr (fromString "title") *> qtext
+       linkOnly <- (skipMany space >> (stringCI "link-only")) *> pure True <|> pure False
+       return $ PageLink pid mTitle linkOnly
 
 pageCmd :: (Functor m, MonadIO m) =>
            AcidState PageState
@@ -61,7 +67,13 @@ pageCmd pageAcid clckShowURL txt =
           do b <- transform (applyCmd pageAcid clckShowURL) segments
              return $ B.toLazyText b
 
-applyCmd pageAcid clckShowURL l@(LinkPage pid mTitle) =
+applyCmd pageAcid clckShowURL l@(PageTitle pid) =
+    do mttl <- query' pageAcid (GetPageTitle pid)
+       case mttl of
+         Nothing -> return $ B.fromText "Untitled"
+         (Just (ttl,_)) -> return $ B.fromText ttl
+
+applyCmd pageAcid clckShowURL l@(PageLink pid mTitle linkOnly) =
     do (ttl, slug) <-
            case mTitle of
              (Just t) -> return (t, Just $ slugify t)
@@ -69,5 +81,12 @@ applyCmd pageAcid clckShowURL l@(LinkPage pid mTitle) =
                             case mttl of
                               Nothing -> return $ (pack "Untitled", Nothing)
                               (Just ttlSlug) -> return ttlSlug
-       html <- unXMLGenT $ <a href=(clckShowURL (ViewPageSlug pid (toSlug ttl slug)) [])><% ttl %></a>
-       return $ B.fromString $ concat $ lines $ renderAsHTML html
+       case linkOnly of
+         False ->
+             do html <- unXMLGenT $ <a href=(clckShowURL (ViewPageSlug pid (toSlug ttl slug)) [])><% ttl %></a>
+                return $ B.fromString $ concat $ lines $ renderAsHTML html
+         True ->
+             return $ B.fromText $ clckShowURL (ViewPageSlug pid (toSlug ttl slug)) []
+
+
+
