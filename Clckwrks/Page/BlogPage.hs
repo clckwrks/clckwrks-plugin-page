@@ -19,7 +19,7 @@ postsHTML =
 postHTML :: Page -> XMLGenT PageM XML
 postHTML Page{..} =
     <li class="blog-post">
-     <h2><% pageTitle %></h2>
+     <h2><a href=(ViewPage pageId)><% pageTitle %></a></h2>
      <span class="pub-date"><% pageDate %></span>
      <% (markupToContent pageSrc) :: PageM Content %>
      <p><a href=(ViewPage pageId)>permalink</a></p>
