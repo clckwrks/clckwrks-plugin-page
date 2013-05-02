@@ -31,5 +31,6 @@ previewPage pid =
                          (Just page) <- query (PageById pid)
                          let ttl = pageTitle page
                          bdy <- markupToContent (pageSrc page)
+                         addHeaderM "X-XSS-Protection" "0"
                          clckT2PageT $ themeTemplate (plugins cs) ttl () bdy
                  else unauthorized (toResponse $ "Sorry, you need Administrator access to view this page.")
