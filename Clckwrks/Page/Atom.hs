@@ -1,5 +1,5 @@
-{-# LANGUAGE RecordWildCards #-}
-{-# OPTIONS_GHC -F -pgmFtrhsx #-}
+{-# LANGUAGE RecordWildCards, OverloadedStrings #-}
+{-# OPTIONS_GHC -F -pgmFhsx2hs #-}
 module Clckwrks.Page.Atom where
 
 import Control.Monad.Trans (liftIO)
@@ -11,16 +11,18 @@ import Clckwrks.ProfileData.Acid
 import Clckwrks.Page.URL
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
 import Data.Maybe            (fromMaybe)
+import Data.Monoid           ((<>))
 import Data.String           (fromString)
-import Data.Text             (Text, pack)
 import qualified Data.Text   as Text
+import Data.Text.Lazy (Text)
+import qualified Data.Text.Lazy.Encoding as TL
 import Data.Time
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Data.Time.Format      (formatTime)
 import Data.UUID             (toString)
 import Happstack.Server      (Happstack, Response, ok, toResponseBS)
-import HSP
-import HSP.XML               (renderXML)
+import HSP.XMLGenerator
+import HSP.XML               (XML, cdata, renderXML, fromStringLit)
 import System.Locale         (defaultTimeLocale)
 import Web.Routes            (showURL)
 
@@ -92,4 +94,4 @@ handleAtomFeed =
     do ps         <- query AllPosts
        feedConfig <- query GetFeedConfig
        xml <- atom feedConfig ps
-       ok $ toResponseBS (fromString "application/atom+xml;charset=utf-8") (UTF8.fromString $ "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" ++ renderXML xml)
+       ok $ toResponseBS (fromString "application/atom+xml;charset=utf-8") ((UTF8.fromString $ "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n") <> (TL.encodeUtf8 $ renderXML xml))

@@ -1,5 +1,5 @@
-{-# LANGUAGE QuasiQuotes #-}
-{-# OPTIONS_GHC -F -pgmFtrhsx #-}
+{-# LANGUAGE QuasiQuotes, OverloadedStrings #-}
+{-# OPTIONS_GHC -F -pgmFhsx2hs #-}
 module Clckwrks.Page.Admin.PreviewPage
     ( previewPage
     ) where
@@ -12,6 +12,8 @@ import Clckwrks.Page.Monad       (PageM, clckT2PageT, markupToContent)
 import Clckwrks.Unauthorized     ()
 import Control.Monad.State       (get)
 import qualified Data.Set        as Set
+import Data.Text.Lazy            (Text)
+import HSP.XMLGenerator
 import Web.Plugins.Core          (getTheme)
 
 previewPage :: PageId -> PageM Response
@@ -33,4 +35,4 @@ previewPage pid =
                          bdy <- markupToContent (pageSrc page)
                          addHeaderM "X-XSS-Protection" "0"
                          clckT2PageT $ themeTemplate (plugins cs) ttl () bdy
-                 else unauthorized (toResponse $ "Sorry, you need Administrator access to view this page.")
+                 else unauthorized (toResponse $ ("Sorry, you need Administrator access to view this page." :: Text))

@@ -1,5 +1,5 @@
-{-# LANGUAGE RecordWildCards #-}
-{-# OPTIONS_GHC -F -pgmFtrhsx #-}
+{-# LANGUAGE OverloadedStrings, RecordWildCards #-}
+{-# OPTIONS_GHC -F -pgmFhsx2hs #-}
 module Clckwrks.Page.BlogPage where
 
 import Clckwrks
@@ -8,6 +8,9 @@ import Clckwrks.Page.Monad
 import Clckwrks.Page.Types
 import Clckwrks.Page.URL
 import Control.Monad.State (get)
+import HSP.XML (XML, fromStringLit)
+import HSP.XMLGenerator
+import Data.Text.Lazy (Text)
 
 postsHTML :: XMLGenT PageM XML
 postsHTML =

@@ -1,4 +1,5 @@
-{-# OPTIONS_GHC -F -pgmFtrhsx #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -F -pgmFhsx2hs #-}
 module Clckwrks.Page.Admin.NewPage where
 
 import Clckwrks
@@ -8,6 +9,9 @@ import Clckwrks.Page.URL       as URL (PageURL(..), PageAdminURL(NewPage, NewPos
 import Clckwrks.Admin.Template (template)
 import Data.UUID               () -- instance Random UUID
 import Data.Time.Clock         (getCurrentTime)
+import Data.Text.Lazy          (Text)
+import HSP.XML
+import HSP.XMLGenerator
 import System.Random           (randomIO)
 
 newPage :: PageKind -> PageM Response
@@ -29,7 +33,7 @@ newPage pageKind =
        now  <- liftIO $ getCurrentTime
        muid <- getUserId
        case muid of
-         Nothing -> escape $ internalServerError $ toResponse "Clcwrks.Admin.NewPage.newPage was unable to obtain the current UserId"
+         Nothing -> escape $ internalServerError $ toResponse ("Clcwrks.Admin.NewPage.newPage was unable to obtain the current UserId" :: Text)
          (Just uid) ->
              do page <- update (Acid.NewPage pageKind uid uuid now)
                 seeOtherURL (PageAdmin $ EditPage (pageId page))

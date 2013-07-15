@@ -25,7 +25,7 @@ import qualified Data.Set           as Set
 import Happstack.Server             ( Response, Happstack, escape, notFound, toResponse
                                     , ok, internalServerError
                                     )
-import HSP                          (unXMLGenT)
+import HSP.XMLGenerator             (unXMLGenT)
 import Web.Routes.Happstack         (seeOtherURL)
 import Web.Plugins.Core             (getTheme)
 

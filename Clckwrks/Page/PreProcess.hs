@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts, OverloadedStrings #-}
-{-# OPTIONS_GHC -F -pgmFtrhsx #-}
+{-# OPTIONS_GHC -F -pgmFhsx2hs #-}
 module Clckwrks.Page.PreProcess where
 
 import Control.Monad.Trans (MonadIO(..))
@@ -18,7 +18,7 @@ import qualified Data.Text.Lazy         as TL
 import           Data.Text.Lazy.Builder (Builder)
 import qualified Data.Text.Lazy.Builder as B
 import HSP
-import HSP.HTML (renderAsHTML)
+import HSP.HTML4  (renderAsHTML)
 import Web.Routes (showURL)
 
 -- TODO: move to reusable module
@@ -84,7 +84,7 @@ applyCmd pageAcid clckShowURL l@(PageLink pid mTitle linkOnly) =
        case linkOnly of
          False ->
              do html <- unXMLGenT $ <a href=(clckShowURL (ViewPageSlug pid (toSlug ttl slug)) [])><% ttl %></a>
-                return $ B.fromString $ concat $ lines $ renderAsHTML html
+                return $ B.fromString $ concat $ lines $ TL.unpack $ renderAsHTML html -- FIXME: don't pass through String to do this
          True ->
              return $ B.fromText $ clckShowURL (ViewPageSlug pid (toSlug ttl slug)) []
 

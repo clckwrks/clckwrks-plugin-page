@@ -1,5 +1,5 @@
-{-# LANGUAGE QuasiQuotes #-}
-{-# OPTIONS_GHC -F -pgmFtrhsx #-}
+{-# LANGUAGE QuasiQuotes, OverloadedStrings #-}
+{-# OPTIONS_GHC -F -pgmFhsx2hs #-}
 module Clckwrks.Page.Admin.EditPage
     ( editPage
     ) where
@@ -12,12 +12,14 @@ import Clckwrks.Page.Acid      (Markup(..), Page(..), PageKind(..), PublishStatu
 import Clckwrks.Page.Types     (PageId(..), Slug(..), toSlug, slugify)
 import Clckwrks.Page.URL       (PageURL(..), PageAdminURL(..))
 import Data.Maybe              (isJust, maybe)
-import Data.Text               (Text, pack)
 import qualified Data.Text     as Text
+import Data.Text.Lazy          (Text)
 import Data.Time.Clock         (getCurrentTime)
+import HSP.XML
+import HSP.XMLGenerator
 import Text.Reform             ((<++), (++>), mapView, transformEitherM)
 import Text.Reform.Happstack   (reform)
-import Text.Reform.HSP.Text    (form, button, inputCheckbox, inputText, label, inputSubmit, select, textarea, fieldset, ol, li, setAttrs)
+import Text.Reform.HSP.Text    (form, button, inputCheckbox, inputText, labelText, inputSubmit, select, textarea, fieldset, ol, li, setAttrs)
 
 data AfterSaveAction
     = EditSomeMore
@@ -50,26 +52,26 @@ pageFormlet page =
     divHorizontal $
       (fieldset $
         (,,,,,)
-                <$> (divControlGroup (label' "Page Type"       ++> (divControls $ select [(PlainPage, "page"), (Post, "post")] (== (pageKind page)))))
-                <*> (divControlGroup (label' "Title"           ++> (divControls $ inputText (pageTitle page) `setAttrs` [("size" := "80"), ("class" := "input-xxlarge")])))
-                <*> (divControlGroup (label' "Slug (optional)" ++> (divControls $ inputText (maybe Text.empty unSlug $ pageSlug page) `setAttrs` [("size" := "80"), ("class" := "input-xxlarge")])))
-                <*> (divControlGroup (divControls (inputCheckboxLabel "Highlight Haskell code using HsColour" hsColour)))
-                <*> (divControlGroup (label' "Body"            ++> (divControls $ textarea 80 25 (markup (pageSrc page)) `setAttrs` [("class" := "input-xxlarge")])))
+                <$> (divControlGroup (label' "Page Type"       ++> (divControls $ select [(PlainPage, ("page" :: Text)), (Post, "post")] (== (pageKind page)))))
+                <*> (divControlGroup (label' "Title"           ++> (divControls $ inputText (pageTitle page) `setAttrs` [("size" := "80"), ("class" := "input-xxlarge") :: Attr Text Text])))
+                <*> (divControlGroup (label' "Slug (optional)" ++> (divControls $ inputText (maybe Text.empty unSlug $ pageSlug page) `setAttrs` [("size" := "80"), ("class" := "input-xxlarge")  :: Attr Text Text])))
+                <*> (divControlGroup (divControls (inputCheckboxLabel ("Highlight Haskell code using HsColour" :: Text) hsColour)))
+                <*> (divControlGroup (label' "Body"            ++> (divControls $ textarea 80 25 (markup (pageSrc page)) `setAttrs` [("class" := "input-xxlarge")  :: Attr Text Text])))
                 <*> (divFormActions
-                      ((,,) <$> (inputSubmit' (pack "Save"))
-                            <*> (inputSubmit'  (pack "Preview") `setAttrs` ("class" := "btn btn-info"))
+                      ((,,) <$> (inputSubmit' (Text.pack "Save"))
+                            <*> (inputSubmit'  (Text.pack "Preview") `setAttrs` (("class" := "btn btn-info")  :: Attr Text Text))
                             <*> newPublishStatus (pageStatus page)))
       ) `transformEitherM` toPage
 
     where
-      inputSubmit' str = inputSubmit str `setAttrs` [("class":="btn")]
+      inputSubmit' str = inputSubmit str `setAttrs` [("class":="btn") :: Attr Text Text]
       inputCheckboxLabel lbl b =
           mapView (\xml -> [<label class="checkbox"><% xml %><% lbl %></label>])
                       (inputCheckbox b)
 
-      label' str       = (label str `setAttrs` [("class":="control-label")])
+      label' str       = (labelText str `setAttrs` [("class":="control-label") :: Attr Text Text])
 
-      labelCB str      = label str `setAttrs` [("class":="checkbox")]
+      labelCB str      = labelText str `setAttrs` [("class":="checkbox") :: Attr Text Text]
 --      divInline        = mapView (\xml -> [<div class="checkbox inline"><% xml %></div>])
       divFormActions   = mapView (\xml -> [<div class="form-actions"><% xml %></div>])
       divHorizontal    = mapView (\xml -> [<div class="form-horizontal"><% xml %></div>])
@@ -77,11 +79,11 @@ pageFormlet page =
       divControls      = mapView (\xml -> [<div class="controls"><% xml %></div>])
 
       newPublishStatus :: PublishStatus -> PageForm (Maybe PublishStatus)
-      newPublishStatus Published = fmap (const Draft)     <$> (inputSubmit' (pack "Unpublish") `setAttrs` [("class" := "btn btn-warning")])
-      newPublishStatus _         = fmap (const Published) <$> (inputSubmit' (pack "Publish")   `setAttrs` [("class" := "btn btn-success")])
+      newPublishStatus Published = fmap (const Draft)     <$> (inputSubmit' (Text.pack "Unpublish") `setAttrs` [("class" := "btn btn-warning") :: Attr Text Text])
+      newPublishStatus _         = fmap (const Published) <$> (inputSubmit' (Text.pack "Publish")   `setAttrs` [("class" := "btn btn-success") :: Attr Text Text])
       hsColour = HsColour `elem` (preProcessors $ pageSrc page)
       toPage :: (MonadIO m) =>
-                (PageKind, Text, Text, Bool, Text, (Maybe Text, Maybe Text, Maybe PublishStatus))
+                (PageKind, Text.Text, Text.Text, Bool, Text.Text, (Maybe Text.Text, Maybe Text.Text, Maybe PublishStatus))
              -> m (Either PageFormError (Page, AfterSaveAction))
       toPage (kind, ttl, slug, haskell, bdy, (msave, mpreview, mpagestatus)) =
           do now <- liftIO $ getCurrentTime

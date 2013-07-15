@@ -1,5 +1,5 @@
-{-# LANGUAGE FlexibleContexts, RecordWildCards #-}
-{-# OPTIONS_GHC -F -pgmFtrhsx #-}
+{-# LANGUAGE FlexibleContexts, OverloadedStrings, RecordWildCards #-}
+{-# OPTIONS_GHC -F -pgmFhsx2hs #-}
 module Clckwrks.Page.API
     ( PageId(..)
 --    , getPage
@@ -30,12 +30,14 @@ import Clckwrks.URL         (ClckURL(..))
 import Control.Applicative  ((<$>))
 import Control.Monad.State  (get)
 import Control.Monad.Trans  (MonadIO)
-import Data.Text            (Text)
+import qualified Data.Text  as T
+import Data.Text.Lazy       (Text)
 import Data.Time            (UTCTime)
 import qualified Data.Text  as Text
 import Clckwrks.Page.Types  (toSlug)
 import Happstack.Server     (Happstack, escape, internalServerError, toResponse)
-import HSP                  hiding (escape)
+import HSP.XMLGenerator     hiding (escape)
+import HSP.XML              (XML, cdata, fromStringLit)
 import HSP.Google.Analytics (analyticsAsync)
 import Text.HTML.TagSoup    ( (~==), isTagCloseName, isTagOpenName, parseTags
                             , renderTags, sections)
@@ -64,7 +66,7 @@ getPageContent =
     do mrkup <- pageSrc <$> getPage
        markupToContent mrkup
 -}
-getPagesSummary :: PageM [(PageId, Text, Maybe Slug, UTCTime, UserId, PublishStatus)]
+getPagesSummary :: PageM [(PageId, T.Text, Maybe Slug, UTCTime, UserId, PublishStatus)]
 getPagesSummary = query PagesSummary
 
 getPageMenu :: GenXML PageM
@@ -85,7 +87,7 @@ getPageSummary pid =
          (Just pge) ->
              extractExcerpt pge
 
-getBlogTitle :: PageM Text
+getBlogTitle :: PageM T.Text
 getBlogTitle = query GetBlogTitle
 
 extractExcerpt :: (MonadIO m, Functor m, Happstack m) =>
@@ -100,7 +102,7 @@ extractExcerpt Page{..} =
                       case c of
                         (TrustedHtml html) ->
                             let tags = parseTags html
-                                paragraphs = sections (~== "<p>") tags
+                                paragraphs = sections (~== ("<p>" :: String)) tags
                                 paragraph = case paragraphs of
                                               [] -> Text.pack "no summary available."
                                               (p:ps) -> renderTags $ takeThrough (not . isTagCloseName (Text.pack "p")) $ filter (not . isTagOpenName (Text.pack "img")) p

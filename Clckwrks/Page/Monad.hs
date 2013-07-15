@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, RecordWildCards, TypeFamilies, TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, RecordWildCards, TypeFamilies, TypeSynonymInstances #-}
 module Clckwrks.Page.Monad where
 
 import Control.Applicative           ((<$>))
@@ -21,7 +21,8 @@ import Data.Data                     (Typeable)
 import qualified Data.Text           as T
 import qualified Data.Text.Lazy      as TL
 import Happstack.Server              (Happstack, Input, ServerPartT)
-import HSP                           (Attr((:=)), Attribute(MkAttr), EmbedAsAttr(..), EmbedAsChild(..), IsName(toName), XMLGenT, XML, pAttrVal)
+import HSP.XMLGenerator
+import HSP.XML
 import Text.Reform                   (CommonFormError, FormError(..))
 import Web.Plugins.Core              (Plugin(..), getConfig, getPluginsSt, getPluginRouteFn)
 import Web.Routes                    (RouteT(..), showURL, withRouteT)
@@ -95,15 +96,15 @@ instance (Functor m, Monad m) => GetAcidState (PageT' url m) PageState where
     getAcidState =
         pageState <$> ask
 
-instance (IsName n) => EmbedAsAttr PageM (Attr n PageURL) where
+instance (IsName n TL.Text) => EmbedAsAttr PageM (Attr n PageURL) where
         asAttr (n := u) =
             do url <- showURL u
-               asAttr $ MkAttr (toName n, pAttrVal (T.unpack url))
+               asAttr $ MkAttr (toName n, pAttrVal (TL.fromStrict url))
 
-instance (IsName n) => EmbedAsAttr PageM (Attr n ClckURL) where
+instance (IsName n TL.Text) => EmbedAsAttr PageM (Attr n ClckURL) where
         asAttr (n := url) =
             do showFn <- pageClckURL <$> ask
-               asAttr $ MkAttr (toName n, pAttrVal (T.unpack $ showFn url []))
+               asAttr $ MkAttr (toName n, pAttrVal (TL.fromStrict $ showFn url []))
 
 
 -- | convert 'Markup' to 'Content' that can be embedded. Generally by running the pre-processors needed.
