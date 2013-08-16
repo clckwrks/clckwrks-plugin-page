@@ -36,7 +36,7 @@ import Data.Time            (UTCTime)
 import qualified Data.Text  as Text
 import Clckwrks.Page.Types  (toSlug)
 import Happstack.Server     (Happstack, escape, internalServerError, toResponse)
-import HSP.XMLGenerator     hiding (escape)
+import HSP.XMLGenerator
 import HSP.XML              (XML, cdata, fromStringLit)
 import HSP.Google.Analytics (analyticsAsync)
 import Text.HTML.TagSoup    ( (~==), isTagCloseName, isTagOpenName, parseTags
