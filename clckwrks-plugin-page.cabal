@@ -1,5 +1,5 @@
 name:                clckwrks-plugin-page
-version:             0.2.2
+version:             0.2.3
 synopsis:            support for CMS/Blogging in clckwrks
 homepage:            http://www.clckwrks.com/
 license:             BSD3
@@ -40,7 +40,7 @@ library
                        Clckwrks.Page.Verbatim
   build-depends:       base                   >= 4.3 && < 4.7,
                        aeson                  == 0.6.*,
-                       acid-state             == 0.11.*,
+                       acid-state             == 0.12.*,
                        attoparsec             == 0.10.*,
                        clckwrks               >= 0.18 && < 0.20,
                        containers             >= 0.4 && < 0.6,
