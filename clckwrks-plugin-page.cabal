@@ -1,5 +1,5 @@
 name:                clckwrks-plugin-page
-version:             0.2.3
+version:             0.2.4
 synopsis:            support for CMS/Blogging in clckwrks
 homepage:            http://www.clckwrks.com/
 license:             BSD3
@@ -62,7 +62,7 @@ library
                        text                   == 0.11.*,
                        time                   == 1.4.*,
                        template-haskell       >= 2.7 && <= 2.9,
-                       uuid                   == 1.2.*,
+                       uuid                   >= 1.2 && <= 1.4,
                        utf8-string            == 0.3.*,
                        web-plugins            == 0.2.*,
                        web-routes             == 0.27.*,
