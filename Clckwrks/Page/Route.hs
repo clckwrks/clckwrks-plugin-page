@@ -73,7 +73,7 @@ routePage url' =
                          (Just page) <- query (PageById pid)
                          let ttl = pageTitle page
                          bdy <- markupToContent (pageSrc page)
-                         clckT2PageT $ themeTemplate (plugins cs) ttl () bdy
+                         clckT2PageT $ themeTemplate (plugins cs) (pageThemeStyleId page) ttl () bdy
                  else do notFound $ toResponse ("Invalid PageId " ++ show (unPageId pid))
 
          (Blog) -> blog

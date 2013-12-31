@@ -3,6 +3,7 @@ module Clckwrks.Page.Types where
 
 import Clckwrks.Markup.HsColour (hscolour)
 import Clckwrks.Markup.Markdown (markdown)
+import Clckwrks.Monad           (ThemeStyleId(..))
 import Clckwrks.Types           (Trust(..))
 import Control.Applicative      ((<$>), optional)
 import Control.Monad.Trans      (MonadIO(liftIO))
@@ -155,26 +156,51 @@ slugify txt = Slug $ Text.dropWhileEnd (=='-') $ Text.map (\c -> if isAlphaNum c
 toSlug :: Text -> Maybe Slug -> Slug
 toSlug txt slug = fromMaybe (slugify txt) slug
 
+
+
+data Page_3 = Page_3
+    { pageId_3        :: PageId
+    , pageAuthor_3    :: UserId
+    , pageTitle_3     :: Text
+    , pageSlug_3      :: Maybe Slug
+    , pageSrc_3       :: Markup
+    , pageExcerpt_3   :: Maybe Markup
+    , pageDate_3      :: UTCTime
+    , pageUpdated_3   :: UTCTime
+    , pageStatus_3    :: PublishStatus
+    , pageKind_3      :: PageKind
+    , pageUUID_3      :: UUID
+    }
+    deriving (Eq, Ord, Read, Show, Data, Typeable)
+$(deriveSafeCopy 3 'extension ''Page_3)
+
+instance Migrate Page_3 where
+    type MigrateFrom Page_3 = Page_002
+    migrate (Page_002 pi pa pt ps pe pd pu pst pk puu) =
+        (Page_3 pi pa pt Nothing ps pe pd pu pst pk puu)
+
 data Page
-    = Page { pageId        :: PageId
-           , pageAuthor    :: UserId
-           , pageTitle     :: Text
-           , pageSlug      :: Maybe Slug
-           , pageSrc       :: Markup
-           , pageExcerpt   :: Maybe Markup
-           , pageDate      :: UTCTime
-           , pageUpdated   :: UTCTime
-           , pageStatus    :: PublishStatus
-           , pageKind      :: PageKind
-           , pageUUID      :: UUID
+    = Page { pageId           :: PageId
+           , pageAuthor       :: UserId
+           , pageTitle        :: Text
+           , pageSlug         :: Maybe Slug
+           , pageSrc          :: Markup
+           , pageExcerpt      :: Maybe Markup
+           , pageDate         :: UTCTime
+           , pageUpdated      :: UTCTime
+           , pageStatus       :: PublishStatus
+           , pageKind         :: PageKind
+           , pageUUID         :: UUID
+           , pageThemeStyleId :: ThemeStyleId
            }
       deriving (Eq, Ord, Read, Show, Data, Typeable)
-$(deriveSafeCopy 3 'extension ''Page)
+$(deriveSafeCopy 4 'extension ''Page)
 
+-- migration added for clckwrks-plugin-page-0.3.0 on 2013-12-26
 instance Migrate Page where
-    type MigrateFrom Page = Page_002
-    migrate (Page_002 pi pa pt ps pe pd pu pst pk puu) =
-        (Page pi pa pt Nothing ps pe pd pu pst pk puu)
+    type MigrateFrom Page = Page_3
+    migrate (Page_3 pi pa pt psl ps pe pd pu pst pk puu) =
+        (Page pi pa pt psl ps pe pd pu pst pk puu (ThemeStyleId 0))
 
 instance Indexable Page where
     empty = ixSet [ ixFun ((:[]) . pageId)

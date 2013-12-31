@@ -38,4 +38,4 @@ blog =
                  <% postsHTML %>
                </div>
 
-       clckT2PageT $ themeTemplate (plugins cs) ttl () bdy
+       clckT2PageT $ themeTemplate (plugins cs) (ThemeStyleId 0) ttl () bdy

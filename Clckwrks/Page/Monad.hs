@@ -77,6 +77,7 @@ clckT2PageT m =
 
 data PageFormError
     = PageCFE (CommonFormError [Input])
+    | PageErrorInternal
       deriving Show
 
 instance FormError PageFormError where

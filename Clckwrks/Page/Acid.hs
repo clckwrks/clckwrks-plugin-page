@@ -23,6 +23,7 @@ module Clckwrks.Page.Acid
 import Clckwrks.Page.Types  (Markup(..), PublishStatus(..), PreProcessor(..), PageId(..), PageKind(..), Page(..), Pages(..), FeedConfig(..), Slug(..), initialFeedConfig, slugify)
 import Clckwrks.Page.Verbatim (verbatimText)
 import Clckwrks.Types       (Trust(..))
+import Clckwrks.Monad       (ThemeStyleId(..))
 import Control.Applicative  ((<$>))
 import Control.Monad.Reader (ask)
 import Control.Monad.State  (get, modify, put)
@@ -128,6 +129,7 @@ initialPageState =
                                                     , pageStatus    = Published
                                                     , pageKind      = PlainPage
                                                     , pageUUID      = fromJust $ UUID.fromString "c306fe3a-8346-11e1-8001-0021cc712949"
+                                                    , pageThemeStyleId = ThemeStyleId 0
                                                     }
                                              ]
                           , feedConfig = fc
@@ -187,6 +189,7 @@ newPage pk uid uuid now =
                        , pageStatus  = Draft
                        , pageKind    = pk
                        , pageUUID    = uuid
+                       , pageThemeStyleId = ThemeStyleId 0
                        }
        put $ ps { nextPageId = PageId $ succ $ unPageId nextPageId
                 , pages      = insert page pages

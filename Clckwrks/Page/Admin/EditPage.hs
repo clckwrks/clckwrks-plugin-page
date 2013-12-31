@@ -5,19 +5,20 @@ module Clckwrks.Page.Admin.EditPage
     ) where
 
 import Control.Applicative ((<$>), (<*>), (<*))
-import Clckwrks
+import Clckwrks                hiding (transform)
 import Clckwrks.Admin.Template (template)
-import Clckwrks.Page.Monad          (PageM, PageForm, PageFormError)
+import Clckwrks.Page.Monad          (PageM, PageForm, PageFormError(..))
 import Clckwrks.Page.Acid      (Markup(..), Page(..), PageKind(..), PublishStatus(..), PreProcessor(..), PageById(..), UpdatePage(..))
 import Clckwrks.Page.Types     (PageId(..), Slug(..), toSlug, slugify)
 import Clckwrks.Page.URL       (PageURL(..), PageAdminURL(..))
+import Control.Monad.State     (get)
 import Data.Maybe              (isJust, maybe)
 import qualified Data.Text     as Text
 import Data.Text.Lazy          (Text)
 import Data.Time.Clock         (getCurrentTime)
 import HSP.XML
 import HSP.XMLGenerator
-import Text.Reform             ((<++), (++>), mapView, transformEitherM)
+import Text.Reform             ((<++), (++>), mapView, transformEitherM, transform, decimal)
 import Text.Reform.Happstack   (reform)
 import Text.Reform.HSP.Text    (form, button, inputCheckbox, inputText, labelText, inputSubmit, select, textarea, fieldset, ol, li, setAttrs)
 
@@ -33,9 +34,10 @@ editPage here pid =
          Nothing -> notFound $ toResponse $ "Page not found: " ++ show (unPageId pid)
          (Just page) ->
              do action <- showURL here
+                styles <- getThemeStyles =<< plugins <$> get
                 template "edit page" () $
                   <%>
-                   <% reform (form action) "ep" updatePage Nothing (pageFormlet page) %>
+                   <% reform (form action) "ep" updatePage Nothing (pageFormlet styles page) %>
                   </%>
     where
       updatePage :: (Page, AfterSaveAction) -> PageM Response
@@ -47,12 +49,15 @@ editPage here pid =
                ShowPreview  -> seeOtherURL (PageAdmin $ PreviewPage (pageId page))
 
 
-pageFormlet :: Page -> PageForm (Page, AfterSaveAction)
-pageFormlet page =
+pageFormlet :: [(ThemeStyleId, ThemeStyle)] -> Page -> PageForm (Page, AfterSaveAction)
+pageFormlet styles' page =
+    let styles = map (\(i, ts) -> (i, themeStyleName ts)) styles' in
     divHorizontal $
       (fieldset $
-        (,,,,,)
+        (,,,,,,)
                 <$> (divControlGroup (label' "Page Type"       ++> (divControls $ select [(PlainPage, ("page" :: Text)), (Post, "post")] (== (pageKind page)))))
+--                <*> (divControlGroup (label' "Theme Style"     ++> (divControls $ ThemeStyleId <$> (select styles (const True)) `transform` (decimal (const PageErrorInternal)))))
+                <*> (divControlGroup (label' "Theme Style"     ++> (divControls $ select styles (== (fst $ head styles)))))
                 <*> (divControlGroup (label' "Title"           ++> (divControls $ inputText (pageTitle page) `setAttrs` [("size" := "80"), ("class" := "input-xxlarge") :: Attr Text Text])))
                 <*> (divControlGroup (label' "Slug (optional)" ++> (divControls $ inputText (maybe Text.empty unSlug $ pageSlug page) `setAttrs` [("size" := "80"), ("class" := "input-xxlarge")  :: Attr Text Text])))
                 <*> (divControlGroup (divControls (inputCheckboxLabel ("Highlight Haskell code using HsColour" :: Text) hsColour)))
@@ -83,9 +88,9 @@ pageFormlet page =
       newPublishStatus _         = fmap (const Published) <$> (inputSubmit' (Text.pack "Publish")   `setAttrs` [("class" := "btn btn-success") :: Attr Text Text])
       hsColour = HsColour `elem` (preProcessors $ pageSrc page)
       toPage :: (MonadIO m) =>
-                (PageKind, Text.Text, Text.Text, Bool, Text.Text, (Maybe Text.Text, Maybe Text.Text, Maybe PublishStatus))
+                (PageKind, ThemeStyleId, Text.Text, Text.Text, Bool, Text.Text, (Maybe Text.Text, Maybe Text.Text, Maybe PublishStatus))
              -> m (Either PageFormError (Page, AfterSaveAction))
-      toPage (kind, ttl, slug, haskell, bdy, (msave, mpreview, mpagestatus)) =
+      toPage (kind, style, ttl, slug, haskell, bdy, (msave, mpreview, mpagestatus)) =
           do now <- liftIO $ getCurrentTime
              return $ Right $
                ( Page { pageId      = pageId page
@@ -104,6 +109,7 @@ pageFormlet page =
                                         Nothing          -> pageStatus page
                       , pageKind    = kind
                       , pageUUID    = pageUUID page
+                      , pageThemeStyleId = style
                       }
                , if isJust mpreview
                  then ShowPreview
