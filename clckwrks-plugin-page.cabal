@@ -38,7 +38,7 @@ library
                        Clckwrks.Page.Atom
   other-modules:
                        Clckwrks.Page.Verbatim
-  build-depends:       base                   >= 4.3 && < 4.7,
+  build-depends:       base                   >= 4.3 && < 4.8,
                        aeson                  >= 0.6 && < 0.8,
                        acid-state             == 0.12.*,
                        attoparsec             >= 0.10 && < 0.12,
@@ -61,7 +61,7 @@ library
                        tagsoup                == 0.13.*,
                        text                   >= 0.11 && < 1.2,
                        time                   == 1.4.*,
-                       template-haskell       >= 2.7 && <= 2.9,
+                       template-haskell       >= 2.7 && <= 2.10,
                        uuid                   >= 1.2 && <= 1.4,
                        utf8-string            == 0.3.*,
                        web-plugins            == 0.2.*,

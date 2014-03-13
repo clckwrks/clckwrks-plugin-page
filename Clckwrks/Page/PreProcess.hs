@@ -10,7 +10,7 @@ import Clckwrks.Page.URL   (PageURL(ViewPageSlug))
 import Clckwrks.Page.Types (PageId(..), slugify, toSlug)
 import Data.Acid                        (AcidState(..))
 import Data.Acid.Advanced               (query')
-import Data.Attoparsec.Text.Lazy        (Parser, Result(..), anyChar, char, choice, decimal, parse, skipMany, space, stringCI, skipMany, try)
+import Data.Attoparsec.Text.Lazy        (Parser, Result(..), anyChar, char, choice, decimal, parse, skipMany, space, asciiCI, skipMany, try)
 import Data.Attoparsec.Combinator (many1, manyTill, skipMany)
 import Data.String (fromString)
 import           Data.Text (Text, pack)
@@ -25,7 +25,7 @@ import Web.Routes (showURL)
 parseAttr :: Text -> Parser ()
 parseAttr name =
     do skipMany space
-       stringCI name
+       asciiCI name
        skipMany space
        char '='
        skipMany space
@@ -47,12 +47,12 @@ data PageCmd
 parseCmd :: Parser PageCmd
 parseCmd =
     do pid      <- parseAttr (fromString "id") *> (PageId <$> decimal)
-       linkOnly <- skipMany space >> stringCI "title-only"
+       linkOnly <- skipMany space >> asciiCI "title-only"
        return $ PageTitle pid
     <|>
     do pid      <- parseAttr (fromString "id") *> (PageId <$> decimal)
        mTitle   <- optional $ parseAttr (fromString "title") *> qtext
-       linkOnly <- (skipMany space >> (stringCI "link-only")) *> pure True <|> pure False
+       linkOnly <- (skipMany space >> (asciiCI "link-only")) *> pure True <|> pure False
        return $ PageLink pid mTitle linkOnly
 
 pageCmd :: (Functor m, MonadIO m) =>
