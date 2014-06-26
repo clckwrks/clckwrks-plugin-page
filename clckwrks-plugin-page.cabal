@@ -1,5 +1,5 @@
 name:                clckwrks-plugin-page
-version:             0.3.3
+version:             0.3.4
 synopsis:            support for CMS/Blogging in clckwrks
 homepage:            http://www.clckwrks.com/
 license:             BSD3
@@ -41,7 +41,7 @@ library
   build-depends:       base                   >= 4.3 && < 4.8,
                        aeson                  >= 0.6 && < 0.8,
                        acid-state             == 0.12.*,
-                       attoparsec             >= 0.10 && < 0.12,
+                       attoparsec             >= 0.10 && < 0.13,
                        clckwrks               >= 0.21 && < 0.23,
                        containers             >= 0.4 && < 0.6,
                        directory              >= 1.1 && < 1.3,
