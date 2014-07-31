@@ -12,9 +12,8 @@ build-type:          Custom
 cabal-version:       >=1.8
 
 source-repository head
-    type:     darcs
-    subdir:   clckwrks-plugin-page
-    location: http://hub.darcs.net/stepcut/clckwrks
+    type:     git
+    location: git://github.com/clckwrks/clckwrks-plugin-page.git
 
 library
   build-tools:
@@ -39,7 +38,7 @@ library
   other-modules:
                        Clckwrks.Page.Verbatim
   build-depends:       base                   >= 4.3 && < 4.8,
-                       aeson                  >= 0.6 && < 0.8,
+                       aeson                  >= 0.6 && < 0.9,
                        acid-state             == 0.12.*,
                        attoparsec             >= 0.10 && < 0.13,
                        clckwrks               >= 0.21 && < 0.23,
