@@ -20,6 +20,7 @@ module Clckwrks.Page.Acid
     , ClearOldUACCT(..)
     ) where
 
+import Clckwrks             (UserId(..))
 import Clckwrks.Page.Types  (Markup(..), PublishStatus(..), PreProcessor(..), PageId(..), PageKind(..), Page(..), Pages(..), FeedConfig(..), Slug(..), initialFeedConfig, slugify)
 import Clckwrks.Page.Verbatim (verbatimText)
 import Clckwrks.Types       (Trust(..))
@@ -40,7 +41,6 @@ import Data.Time.Clock.POSIX(posixSecondsToUTCTime)
 import qualified Data.Text  as Text
 import           Data.UUID  (UUID)
 import qualified Data.UUID  as UUID
-import Happstack.Auth       (UserId(..))
 import HSP.Google.Analytics (UACCT)
 
 data PageState_001  = PageState_001

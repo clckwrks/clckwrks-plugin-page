@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable, FlexibleInstances, TemplateHaskell, TypeFamilies, OverloadedStrings #-}
 module Clckwrks.Page.Types where
 
+import Clckwrks                 (UserId(..))
 import Clckwrks.Markup.HsColour (hscolour)
 import Clckwrks.Markup.Markdown (markdown)
 import Clckwrks.Monad           (ThemeStyleId(..))
@@ -20,7 +21,6 @@ import Data.Time                (UTCTime)
 import Data.Time.Clock.POSIX    (posixSecondsToUTCTime)
 import Data.UUID                (UUID)
 import Data.UUID.V5             (generateNamed, namespaceOID)
-import Happstack.Auth           (UserId(..))
 import Web.Routes               (PathInfo(..), anySegment)
 import System.Random            (randomIO)
 
