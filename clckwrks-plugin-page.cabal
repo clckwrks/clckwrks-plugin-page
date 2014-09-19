@@ -51,7 +51,7 @@ library
                        ixset                  == 1.0.*,
                        mtl                    >= 2.0 && < 2.3,
                        old-locale             == 1.0.*,
-                       random                 == 1.0.*,
+                       random                 >= 1.0 && < 1.2,
                        reform                 == 0.2.*,
                        reform-happstack       == 0.2.*,
                        reform-hsp             == 0.2.*,
