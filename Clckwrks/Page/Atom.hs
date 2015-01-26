@@ -1,30 +1,29 @@
-{-# LANGUAGE RecordWildCards, OverloadedStrings #-}
-{-# OPTIONS_GHC -F -pgmFhsx2hs #-}
+{-# LANGUAGE RecordWildCards, OverloadedStrings, QuasiQuotes #-}
 module Clckwrks.Page.Atom where
 
-import Control.Monad.Trans (liftIO)
-import Clckwrks.Monad         (Clck, Content(..), query, withAbs)
+import Control.Monad.Trans     (liftIO)
+import Clckwrks.Monad          (Clck, Content(..), query, withAbs)
 import Clckwrks.Page.Acid
-import Clckwrks.Page.Monad    (PageM, markupToContent)
+import Clckwrks.Page.Monad     (PageM, markupToContent)
 import Clckwrks.Page.Types
 import Clckwrks.ProfileData.Acid
 import Clckwrks.Page.URL
-import qualified Data.ByteString.Lazy.UTF8 as UTF8
-import Data.Maybe            (fromMaybe)
-import Data.Monoid           ((<>))
-import Data.String           (fromString)
-import qualified Data.Text   as Text
+import Data.Maybe              (fromMaybe)
+import Data.Monoid             ((<>))
+import Data.String             (fromString)
+import qualified Data.Text     as Text
 import Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy.Encoding as TL
 import Data.Time
-import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
-import Data.Time.Format      (formatTime)
-import Data.UUID             (toString)
-import Happstack.Server      (Happstack, Response, ok, toResponseBS)
+import Data.Time.Clock.POSIX   (posixSecondsToUTCTime)
+import Data.Time.Format        (formatTime)
+import Data.UUID               (toString)
+import Happstack.Server        (Happstack, Response, ok, toResponseBS)
 import HSP.XMLGenerator
-import HSP.XML               (XML, cdata, renderXML, fromStringLit)
-import System.Locale         (defaultTimeLocale)
-import Web.Routes            (showURL)
+import HSP.XML                 (XML, cdata, renderXML, fromStringLit)
+import Language.Haskell.HSX.QQ (hsx)
+import System.Locale           (defaultTimeLocale)
+import Web.Routes              (showURL)
 
 atom :: FeedConfig  -- ^ feed configuration
      -> [Page]      -- ^ pages to publish in feed
@@ -32,7 +31,8 @@ atom :: FeedConfig  -- ^ feed configuration
 atom FeedConfig{..} pages =
     do blogURL <- withAbs $ showURL Blog
        atomURL <- withAbs $ showURL AtomFeed
-       unXMLGenT $ <feed xmlns="http://www.w3.org/2005/Atom">
+       unXMLGenT $ [hsx|
+                   <feed xmlns="http://www.w3.org/2005/Atom">
                     <title><% feedTitle %></title>
                     <link type="text/html" href=blogURL />
                     <link rel="self" type="application/atom+xml" href=atomURL />
@@ -42,7 +42,7 @@ atom FeedConfig{..} pages =
                     <updated><% atomDate $ mostRecentUpdate pages %></updated>
                     <id><% "urn:uuid:" ++ toString feedUUID %></id>
                     <% mapM entry pages %>
-                   </feed>
+                   </feed> |]
 
 mostRecentUpdate :: [Page]  -- ^ pages to consider
                  -> UTCTime -- ^ most recent updated time
@@ -54,14 +54,14 @@ entry :: Page
       -> PageM XML
 entry Page{..} =
   do viewPageSlug <- withAbs $ showURL (ViewPageSlug pageId (toSlug pageTitle pageSlug))
-     unXMLGenT $ <entry>
+     unXMLGenT $ [hsx| <entry>
                    <title><% pageTitle %></title>
                    <link href=viewPageSlug />
                    <id><% "urn:uuid:" ++ toString pageUUID %></id>
                    <% author %>
                    <updated><% atomDate pageUpdated %></updated>
                    <% atomContent pageSrc %>
-                 </entry>
+                 </entry> |]
     where
       author :: XMLGenT PageM XML
       author =
@@ -71,10 +71,10 @@ entry Page{..} =
                (Just n)
                    | Text.null n ->
                        return $ cdata ""
-                   | otherwise ->
+                   | otherwise -> [hsx|
                        <author>
                         <name><% n %></name>
-                       </author>
+                       </author> |]
 
 atomDate :: UTCTime -> String
 atomDate time =
@@ -85,13 +85,14 @@ atomContent markup =
     do c <- markupToContent markup
        case c of
          (PlainText txt) ->
-              unXMLGenT $ <content type="text"><% txt %></content>
+              unXMLGenT $ [hsx| <content type="text"><% txt %></content> |]
          (TrustedHtml html) ->
-              unXMLGenT $ <content type="html"><% html %></content>
+              unXMLGenT $ [hsx| <content type="html"><% html %></content> |]
 
 handleAtomFeed :: PageM Response
 handleAtomFeed =
     do ps         <- query AllPosts
        feedConfig <- query GetFeedConfig
        xml <- atom feedConfig ps
-       ok $ toResponseBS (fromString "application/atom+xml;charset=utf-8") ((UTF8.fromString $ "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n") <> (TL.encodeUtf8 $ renderXML xml))
+       ok $ toResponseBS "application/atom+xml;charset=utf-8" ((TL.encodeUtf8 $ "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n") <> (TL.encodeUtf8 $ renderXML xml))
+
