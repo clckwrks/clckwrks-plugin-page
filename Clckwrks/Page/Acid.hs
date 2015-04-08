@@ -87,7 +87,7 @@ initialPageMarkup = [verbatimText|Congratulations! You are now running clckwrks!
 Create an Account
 -----------------
 
-Go [here](/clck/auth/auth/create) and create an account for yourself.
+Go [here](/authenticate/login) and create an account for yourself.
 
 Give yourself Administrator permissions
 -------------------------------
