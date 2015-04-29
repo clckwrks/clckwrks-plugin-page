@@ -45,6 +45,7 @@ feedConfigForm fc@FeedConfig{..} =
         )
      `transformEither` toFeedConfig
     where
+      label' :: Text -> PageForm ()
       label' str      = (labelText str `setAttrs` [("class":="control-label") :: Attr Text Text])
       divHorizontal   = mapView (\xml -> [<div class="form-horizontal"><% xml %></div>])
       divControlGroup = mapView (\xml -> [<div class="control-group"><% xml %></div>])
