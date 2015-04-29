@@ -69,6 +69,7 @@ pageFormlet styles' page =
       ) `transformEitherM` toPage
 
     where
+      inputSubmit' :: Text.Text -> PageForm (Maybe Text.Text)
       inputSubmit' str = inputSubmit str `setAttrs` [("class":="btn") :: Attr Text Text]
       inputCheckboxLabel lbl b =
           mapView (\xml -> [<label class="checkbox"><% xml %><% lbl %></label>])
