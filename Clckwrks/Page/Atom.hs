@@ -12,9 +12,9 @@ import Data.Maybe              (fromMaybe)
 import Data.Monoid             ((<>))
 import Data.String             (fromString)
 import qualified Data.Text     as Text
-import Data.Text.Lazy (Text)
+import Data.Text.Lazy          (Text)
 import qualified Data.Text.Lazy.Encoding as TL
-import Data.Time
+import Data.Time               (UTCTime)
 import Data.Time.Clock.POSIX   (posixSecondsToUTCTime)
 import Data.Time.Format        (formatTime)
 import Data.UUID               (toString)
@@ -22,7 +22,7 @@ import Happstack.Server        (Happstack, Response, ok, toResponseBS)
 import HSP.XMLGenerator
 import HSP.XML                 (XML, cdata, renderXML, fromStringLit)
 import Language.Haskell.HSX.QQ (hsx)
-import System.Locale           (defaultTimeLocale)
+import Data.Time.Locale.Compat (defaultTimeLocale)
 import Web.Routes              (showURL)
 
 atom :: FeedConfig  -- ^ feed configuration
@@ -95,4 +95,3 @@ handleAtomFeed =
        feedConfig <- query GetFeedConfig
        xml <- atom feedConfig ps
        ok $ toResponseBS "application/atom+xml;charset=utf-8" ((TL.encodeUtf8 $ "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n") <> (TL.encodeUtf8 $ renderXML xml))
-
