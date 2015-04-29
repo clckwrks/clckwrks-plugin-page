@@ -71,12 +71,15 @@ pageFormlet styles' page =
     where
       inputSubmit' :: Text.Text -> PageForm (Maybe Text.Text)
       inputSubmit' str = inputSubmit str `setAttrs` [("class":="btn") :: Attr Text Text]
+      inputCheckboxLabel :: Text -> Bool -> PageForm Bool
       inputCheckboxLabel lbl b =
           mapView (\xml -> [<label class="checkbox"><% xml %><% lbl %></label>])
                       (inputCheckbox b)
 
+      label' :: Text -> PageForm ()
       label' str       = (labelText str `setAttrs` [("class":="control-label") :: Attr Text Text])
 
+      labelCB :: Text -> PageForm ()
       labelCB str      = labelText str `setAttrs` [("class":="checkbox") :: Attr Text Text]
 --      divInline        = mapView (\xml -> [<div class="checkbox inline"><% xml %></div>])
       divFormActions   = mapView (\xml -> [<div class="form-actions"><% xml %></div>])
