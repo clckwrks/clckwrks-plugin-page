@@ -67,6 +67,11 @@ pageCmd pageAcid clckShowURL txt =
           do b <- transform (applyCmd pageAcid clckShowURL) segments
              return $ B.toLazyText b
 
+applyCmd :: (Functor m, MonadIO m) =>
+            AcidState PageState
+         -> (PageURL -> [(Text, Maybe Text)] -> Text)
+         -> PageCmd
+         -> ClckT url m Builder
 applyCmd pageAcid clckShowURL l@(PageTitle pid) =
     do mttl <- query' pageAcid (GetPageTitle pid)
        case mttl of
