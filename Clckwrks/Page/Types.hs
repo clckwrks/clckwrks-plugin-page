@@ -4,6 +4,7 @@ module Clckwrks.Page.Types where
 import Clckwrks                 (UserId(..))
 import Clckwrks.Markup.HsColour (hscolour)
 import Clckwrks.Markup.Markdown (markdown)
+import Clckwrks.Markup.Pandoc   (pandoc)
 import Clckwrks.Monad           (ThemeStyleId(..))
 import Clckwrks.Types           (Trust(..))
 import Control.Applicative      ((<$>), optional)
@@ -40,13 +41,23 @@ instance ToJSON PageId where
 instance FromJSON PageId where
     parseJSON n = PageId <$> parseJSON n
 
+data PreProcessor_1
+    = HsColour_1
+    | Markdown_1
+      deriving (Eq, Ord, Read, Show, Data, Typeable)
+$(deriveSafeCopy 1 'base ''PreProcessor_1)
+
 data PreProcessor
     = HsColour
     | Markdown
+    | Pandoc
       deriving (Eq, Ord, Read, Show, Data, Typeable)
-$(deriveSafeCopy 1 'base ''PreProcessor)
+$(deriveSafeCopy 2 'extension ''PreProcessor)
 
--- $(deriveJSON id ''PreProcessor)
+instance Migrate PreProcessor where
+    type MigrateFrom PreProcessor = PreProcessor_1
+    migrate HsColour_1 = HsColour
+    migrate Markdown_1 = Markdown
 
 runPreProcessors :: (MonadIO m) => [PreProcessor] -> Trust -> Text -> m (Either Text Text)
 runPreProcessors [] _ txt = return (Right txt)
@@ -61,6 +72,7 @@ runPreProcessor pproc trust txt =
     do let f = case pproc of
                  Markdown -> markdown Nothing trust
                  HsColour -> hscolour Nothing
+                 Pandoc   -> pandoc Nothing trust
        f txt
 
 data Markup_001

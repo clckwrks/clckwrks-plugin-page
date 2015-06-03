@@ -96,7 +96,7 @@ After you create an account you will want to give yourself `Administrator` privi
 
     $ clckwrks-cli _state/profileData_socket
 
-that should start an interactive session. If the server is running as `root`, then you may need to add a `sudo` in front. 
+that should start an interactive session. If the server is running as `root`, then you may need to add a `sudo` in front.
 
 Assuming you are `UserId 1` you can now give yourself admin access:
 
@@ -119,7 +119,7 @@ initialPageState =
                                                     , pageAuthor    = UserId 1
                                                     , pageTitle     = "Welcome To clckwrks!"
                                                     , pageSlug      = Just $ slugify "Welcome to clckwrks"
-                                                    , pageSrc       = Markup { preProcessors = [ Markdown ]
+                                                    , pageSrc       = Markup { preProcessors = [ Pandoc ]
                                                                              , trust         = Trusted
                                                                              , markup        = initialPageMarkup
                                                                              }
@@ -179,7 +179,7 @@ newPage pk uid uuid now =
                        , pageAuthor  = uid
                        , pageTitle   = "Untitled"
                        , pageSlug    = Nothing
-                       , pageSrc     = Markup { preProcessors = [ Markdown ]
+                       , pageSrc     = Markup { preProcessors = [ Pandoc ]
                                               , trust         = Trusted
                                               , markup        = Text.empty
                                               }

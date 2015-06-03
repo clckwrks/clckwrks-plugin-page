@@ -60,7 +60,7 @@ pageFormlet styles' page =
                 <*> (divControlGroup (label' "Theme Style"     ++> (divControls $ select styles (== (fst $ head styles)))))
                 <*> (divControlGroup (label' "Title"           ++> (divControls $ inputText (pageTitle page) `setAttrs` [("size" := "80"), ("class" := "input-xxlarge") :: Attr Text Text])))
                 <*> (divControlGroup (label' "Slug (optional)" ++> (divControls $ inputText (maybe Text.empty unSlug $ pageSlug page) `setAttrs` [("size" := "80"), ("class" := "input-xxlarge")  :: Attr Text Text])))
-                <*> (divControlGroup (divControls (inputCheckboxLabel ("Highlight Haskell code using HsColour" :: Text) hsColour)))
+                <*> divControlGroup (label' "Markdown processor" ++> (divControls $ select [(Pandoc, "Pandoc"), (Markdown, "markdown perl script (legacy)" :: Text), (HsColour, "markdown perl script + hscolour (legacy)")] (\p -> p `elem` (preProcessors $ pageSrc page))))
                 <*> (divControlGroup (label' "Body"            ++> (divControls $ textarea 80 25 (markup (pageSrc page)) `setAttrs` [("class" := "input-xxlarge")  :: Attr Text Text])))
                 <*> (divFormActions
                       ((,,) <$> (inputSubmit' (Text.pack "Save"))
@@ -90,18 +90,21 @@ pageFormlet styles' page =
       newPublishStatus :: PublishStatus -> PageForm (Maybe PublishStatus)
       newPublishStatus Published = fmap (const Draft)     <$> (inputSubmit' (Text.pack "Unpublish") `setAttrs` [("class" := "btn btn-warning") :: Attr Text Text])
       newPublishStatus _         = fmap (const Published) <$> (inputSubmit' (Text.pack "Publish")   `setAttrs` [("class" := "btn btn-success") :: Attr Text Text])
-      hsColour = HsColour `elem` (preProcessors $ pageSrc page)
       toPage :: (MonadIO m) =>
-                (PageKind, ThemeStyleId, Text.Text, Text.Text, Bool, Text.Text, (Maybe Text.Text, Maybe Text.Text, Maybe PublishStatus))
+                (PageKind, ThemeStyleId, Text.Text, Text.Text, PreProcessor, Text.Text, (Maybe Text.Text, Maybe Text.Text, Maybe PublishStatus))
              -> m (Either PageFormError (Page, AfterSaveAction))
-      toPage (kind, style, ttl, slug, haskell, bdy, (msave, mpreview, mpagestatus)) =
+      toPage (kind, style, ttl, slug, markup, bdy, (msave, mpreview, mpagestatus)) =
           do now <- liftIO $ getCurrentTime
              return $ Right $
                ( Page { pageId      = pageId page
                       , pageAuthor  = pageAuthor page
                       , pageTitle   = ttl
                       , pageSlug    = if Text.null slug then Nothing else Just (slugify slug)
-                      , pageSrc     = Markup { preProcessors =  (if haskell then ([ HsColour ] ++) else id) [ Markdown ]
+                      , pageSrc     = Markup { preProcessors =
+                                                   case markup of
+                                                     Markdown -> [ Markdown ]
+                                                     HsColour -> [ Markdown, HsColour ]
+                                                     Pandoc   -> [ Pandoc ]
                                              , trust = Trusted
                                              , markup = bdy
                                              }
