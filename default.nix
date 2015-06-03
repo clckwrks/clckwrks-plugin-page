@@ -7,7 +7,7 @@
 }:
 mkDerivation {
   pname = "clckwrks-plugin-page";
-  version = "0.3.9";
+  version = "0.4.0";
   src = ./.;
   buildDepends = [
     acid-state aeson attoparsec base clckwrks containers directory
