@@ -1,4 +1,4 @@
-{ nixpkgs ? import <nixpkgs> {}, compiler ? "ghc7101" }:
+{ nixpkgs ? import <nixpkgs> {}, compiler ? "default" }:
 
 let
 
@@ -13,22 +13,25 @@ let
       }:
       mkDerivation {
         pname = "clckwrks-plugin-page";
-        version = "0.4.0";
+        version = "0.4.1";
         src = ./.;
-        buildDepends = [
+        libraryHaskellDepends = [
           acid-state aeson attoparsec base clckwrks containers directory
           filepath happstack-hsp happstack-server hsp hsx2hs ixset mtl
           old-locale random reform reform-happstack reform-hsp safecopy
           tagsoup template-haskell text time time-locale-compat uuid
           web-plugins web-routes web-routes-happstack web-routes-th
         ];
-        buildTools = [ hsx2hs ];
         homepage = "http://www.clckwrks.com/";
         description = "support for CMS/Blogging in clckwrks";
         license = stdenv.lib.licenses.bsd3;
       };
 
-  drv = pkgs.haskell.packages.${compiler}.callPackage f {};
+  haskellPackages = if compiler == "default"
+                       then pkgs.haskellPackages
+                       else pkgs.haskell.packages.${compiler};
+  buildTools = [ hsx2hs ];
+  drv = haskellPackages.callPackage f {};
 
 in
 

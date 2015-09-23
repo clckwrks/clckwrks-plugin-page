@@ -7,9 +7,9 @@
 }:
 mkDerivation {
   pname = "clckwrks-plugin-page";
-  version = "0.4.0";
+  version = "0.4.1";
   src = ./.;
-  buildDepends = [
+  libraryHaskellDepends = [
     acid-state aeson attoparsec base clckwrks containers directory
     filepath happstack-hsp happstack-server hsp hsx2hs ixset mtl
     old-locale random reform reform-happstack reform-hsp safecopy
