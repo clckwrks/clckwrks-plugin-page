@@ -30,7 +30,7 @@ let
   haskellPackages = if compiler == "default"
                        then pkgs.haskellPackages
                        else pkgs.haskell.packages.${compiler};
-  buildTools = [ hsx2hs ];
+  buildTools = [ pkgs.haskellPackages.hsx2hs ];
   drv = haskellPackages.callPackage f {};
 
 in

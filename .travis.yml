@@ -27,7 +27,7 @@ before_install:
 
 install:
  - cabal --version
- - happy --version 
+ - happy --version
  - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
  - if [ -f $HOME/.cabal/packages/hackage.haskell.org/00-index.tar.gz ];
    then
