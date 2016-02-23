@@ -1,5 +1,5 @@
 name:                clckwrks-plugin-page
-version:             0.4.3
+version:             0.4.3.1
 synopsis:            support for CMS/Blogging in clckwrks
 description:         This provides two similar concepts Pages and Posts. Both allow
                      you to create page content by editting pages in the browser. A Post
@@ -42,8 +42,8 @@ library
   other-modules:
                        Clckwrks.Page.Verbatim
   build-depends:       base                   >= 4.3 && < 4.9,
-                       aeson                  >= 0.6 && < 0.11,
                        acid-state             >= 0.12 && < 0.15,
+                       aeson                  (>= 0.4  && < 0.10) || (== 0.11.*),
                        attoparsec             >= 0.10 && < 0.14,
                        clckwrks               >= 0.21 && < 0.24,
                        containers             >= 0.4  && < 0.6,
