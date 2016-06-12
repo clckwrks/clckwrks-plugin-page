@@ -9,7 +9,7 @@ let
       , hsp, hsx2hs, ixset, mtl, old-locale, random, reform
       , reform-happstack, reform-hsp, safecopy, stdenv, tagsoup
       , template-haskell, text, time, time-locale-compat, uuid
-      , web-plugins, web-routes, web-routes-happstack, web-routes-th
+      , web-plugins, web-routes, web-routes-happstack, web-routes-th, cabal-install
       }:
       mkDerivation {
         pname = "clckwrks-plugin-page";
@@ -22,6 +22,7 @@ let
           tagsoup template-haskell text time time-locale-compat uuid
           web-plugins web-routes web-routes-happstack web-routes-th
         ];
+        buildTools = [ cabal-install ];
         homepage = "http://www.clckwrks.com/";
         description = "support for CMS/Blogging in clckwrks";
         license = stdenv.lib.licenses.bsd3;
