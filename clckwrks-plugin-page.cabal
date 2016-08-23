@@ -1,5 +1,5 @@
 name:                clckwrks-plugin-page
-version:             0.4.3.3
+version:             0.4.3.4
 synopsis:            support for CMS/Blogging in clckwrks
 description:         This provides two similar concepts Pages and Posts. Both allow
                      you to create page content by editting pages in the browser. A Post
@@ -43,7 +43,7 @@ library
                        Clckwrks.Page.Verbatim
   build-depends:       base                   >= 4.3 && < 4.10,
                        acid-state             >= 0.12 && < 0.15,
-                       aeson                  (>= 0.4  && < 0.10) || (== 0.11.*),
+                       aeson                  (>= 0.4  && < 0.10) || (>= 0.11 && < 1.1),
                        attoparsec             >= 0.10 && < 0.14,
                        clckwrks               >= 0.21 && < 0.24,
                        containers             >= 0.4  && < 0.6,
@@ -67,6 +67,7 @@ library
                        time-locale-compat     >= 0.1  && < 0.2,
                        template-haskell       >= 2.7  && <= 2.12,
                        uuid                   >= 1.2  && <= 1.4,
+                       uuid-orphans           >= 1.2  && < 1.5,
                        web-plugins            == 0.2.*,
                        web-routes             == 0.27.*,
                        web-routes-happstack   == 0.23.*,
