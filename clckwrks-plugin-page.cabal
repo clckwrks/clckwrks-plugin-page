@@ -1,5 +1,5 @@
 name:                clckwrks-plugin-page
-version:             0.4.3.4
+version:             0.4.3.5
 synopsis:            support for CMS/Blogging in clckwrks
 description:         This provides two similar concepts Pages and Posts. Both allow
                      you to create page content by editting pages in the browser. A Post
@@ -52,7 +52,7 @@ library
                        happstack-hsp          >= 7.2  && < 7.4,
                        happstack-server       >= 7.0  && < 7.5,
                        hsp                    >= 0.9  && < 0.11,
-                       hsx2hs                 >= 0.13 && < 0.14,
+                       hsx2hs                 >= 0.13 && < 0.15,
                        ixset                  == 1.0.*,
                        mtl                    >= 2.0  && < 2.3,
                        old-locale             == 1.0.*,
