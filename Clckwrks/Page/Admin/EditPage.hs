@@ -57,7 +57,7 @@ pageFormlet styles' page =
         (,,,,,,)
                 <$> (divControlGroup (label' "Page Type"       ++> (divControls $ select [(PlainPage, ("page" :: Text)), (Post, "post")] (== (pageKind page)))))
 --                <*> (divControlGroup (label' "Theme Style"     ++> (divControls $ ThemeStyleId <$> (select styles (const True)) `transform` (decimal (const PageErrorInternal)))))
-                <*> (divControlGroup (label' "Theme Style"     ++> (divControls $ select styles (== (fst $ head styles)))))
+                <*> (divControlGroup (label' "Theme Style"     ++> (divControls $ select styles (== (pageThemeStyleId page)))))
                 <*> (divControlGroup (label' "Title"           ++> (divControls $ inputText (pageTitle page) `setAttrs` [("size" := "80"), ("class" := "input-xxlarge") :: Attr Text Text])))
                 <*> (divControlGroup (label' "Slug (optional)" ++> (divControls $ inputText (maybe Text.empty unSlug $ pageSlug page) `setAttrs` [("size" := "80"), ("class" := "input-xxlarge")  :: Attr Text Text])))
                 <*> divControlGroup (label' "Markdown processor" ++> (divControls $ select [(Pandoc, "Pandoc"), (Markdown, "markdown perl script (legacy)" :: Text), (HsColour, "markdown perl script + hscolour (legacy)")] (\p -> p `elem` (preProcessors $ pageSrc page))))

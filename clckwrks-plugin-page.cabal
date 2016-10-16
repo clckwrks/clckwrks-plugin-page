@@ -1,5 +1,5 @@
 name:                clckwrks-plugin-page
-version:             0.4.3.5
+version:             0.4.3.6
 synopsis:            support for CMS/Blogging in clckwrks
 description:         This provides two similar concepts Pages and Posts. Both allow
                      you to create page content by editting pages in the browser. A Post
