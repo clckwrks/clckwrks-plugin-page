@@ -20,9 +20,9 @@ let
           filepath happstack-hsp happstack-server hsp hsx2hs ixset mtl
           old-locale random reform reform-happstack reform-hsp safecopy
           tagsoup template-haskell text time time-locale-compat uuid
-          web-plugins web-routes web-routes-happstack web-routes-th
+          web-plugins web-routes web-routes-happstack web-routes-th cabal-install
         ];
-        buildTools = [ cabal-install ];
+        buildTools = [  ];
         homepage = "http://www.clckwrks.com/";
         description = "support for CMS/Blogging in clckwrks";
         license = stdenv.lib.licenses.bsd3;
