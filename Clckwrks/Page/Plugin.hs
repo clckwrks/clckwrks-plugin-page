@@ -46,8 +46,8 @@ pageHandler showPageURL pageConfig plugins paths =
 pageInit :: ClckPlugins
          -> IO (Maybe Text)
 pageInit plugins =
-    do (Just pageShowFn) <- getPluginRouteFn plugins (pluginName pagePlugin)
-       (Just clckShowFn) <- getPluginRouteFn plugins (pluginName clckPlugin)
+    do ~(Just pageShowFn) <- getPluginRouteFn plugins (pluginName pagePlugin)
+       ~(Just clckShowFn) <- getPluginRouteFn plugins (pluginName clckPlugin)
        mTopDir <- clckTopDir <$> getConfig plugins
        let basePath = maybe "_state" (\td -> td </> "_state") mTopDir -- FIXME
            pageDir  = maybe "_page" (\td -> td </> "_page") mTopDir
@@ -72,7 +72,7 @@ pageInit plugins =
 addPageAdminMenu :: ClckT url IO ()
 addPageAdminMenu =
     do p <- plugins <$> get
-       (Just pageShowURL) <- getPluginRouteFn p (pluginName pagePlugin)
+       ~(Just pageShowURL) <- getPluginRouteFn p (pluginName pagePlugin)
        let newPageURL    = pageShowURL (PageAdmin NewPage) []
            pagesURL      = pageShowURL (PageAdmin Pages) []
            feedConfigURL = pageShowURL (PageAdmin EditFeedConfig) []

@@ -30,7 +30,7 @@ previewPage pid =
                     (Just uid) -> query $ HasRole uid (Set.singleton Administrator)
               if authorized
                  then do cs <- get
-                         (Just page) <- query (PageById pid)
+                         ~(Just page) <- query (PageById pid)
                          let ttl = pageTitle page
                          bdy <- markupToContent (pageSrc page)
                          addHeaderM "X-XSS-Protection" "0"

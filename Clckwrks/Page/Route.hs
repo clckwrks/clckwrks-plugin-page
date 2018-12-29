@@ -70,7 +70,7 @@ routePage url' =
            do published <- query (IsPublishedPage pid)
               if published
                  then do cs <- get
-                         (Just page) <- query (PageById pid)
+                         ~(Just page) <- query (PageById pid)
                          let ttl = pageTitle page
                          bdy <- markupToContent (pageSrc page)
                          clckT2PageT $ themeTemplate (plugins cs) (pageThemeStyleId page) ttl () bdy

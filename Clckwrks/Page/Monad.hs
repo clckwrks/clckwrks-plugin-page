@@ -67,7 +67,7 @@ clckT2PageT :: (Functor m, MonadIO m, Typeable url1) =>
           -> PageT m a
 clckT2PageT m =
     do p <- plugins <$> get
-       (Just clckShowFn) <- getPluginRouteFn p (pluginName clckPlugin)
+       ~(Just clckShowFn) <- getPluginRouteFn p (pluginName clckPlugin)
        flattenURLClckT clckShowFn $ mapClckT addReaderT m
     where
       addReaderT :: (Monad m) => m (a, ClckState) -> ReaderT PageConfig m (a, ClckState)
@@ -116,7 +116,7 @@ markupToContent :: (Functor m, MonadIO m, Happstack m) =>
 markupToContent Markup{..} =
     do clckState <- get
        transformers <- getPreProcessors (plugins clckState)
-       (Just clckRouteFn) <- getPluginRouteFn (plugins clckState) (pluginName clckPlugin)
+       ~(Just clckRouteFn) <- getPluginRouteFn (plugins clckState) (pluginName clckPlugin)
        (markup', clckState') <- runClckT clckRouteFn clckState (foldM (\txt pp -> pp txt) (TL.fromStrict markup) transformers)
        put clckState'
        e <- liftIO $ runPreProcessors preProcessors trust (TL.toStrict markup')
