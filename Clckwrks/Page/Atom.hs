@@ -1,13 +1,14 @@
-{-# LANGUAGE RecordWildCards, OverloadedStrings, QuasiQuotes #-}
+{-# LANGUAGE FlexibleInstances, RecordWildCards, OverloadedStrings, QuasiQuotes #-}
 module Clckwrks.Page.Atom where
 
-import Control.Monad.Trans     (liftIO)
+import Control.Monad.Trans     (lift, liftIO)
 import Clckwrks.Monad          (Clck, Content(..), query, withAbs)
 import Clckwrks.Page.Acid
 import Clckwrks.Page.Monad     (PageM, markupToContent)
 import Clckwrks.Page.Types
 import Clckwrks.ProfileData.Acid
 import Clckwrks.Page.URL
+import Control.Monad.Fail      (MonadFail(fail))
 import Data.Maybe              (fromMaybe)
 import Data.Monoid             ((<>))
 import Data.String             (fromString)
@@ -18,11 +19,12 @@ import Data.Time               (UTCTime)
 import Data.Time.Clock.POSIX   (posixSecondsToUTCTime)
 import Data.Time.Format        (formatTime)
 import Data.UUID               (toString)
-import Happstack.Server        (Happstack, Response, ok, toResponseBS)
+import Happstack.Server        (Happstack, Response, ok, ServerPartT, toResponseBS)
 import HSP.XMLGenerator
 import HSP.XML                 (XML, cdata, renderXML, fromStringLit)
 import Language.Haskell.HSX.QQ (hsx)
 import Data.Time.Locale.Compat (defaultTimeLocale)
+import Prelude hiding (fail)
 import Web.Routes              (showURL)
 
 atom :: FeedConfig  -- ^ feed configuration

@@ -3,6 +3,7 @@ module Clckwrks.Page.Monad where
 
 import Control.Applicative           ((<$>))
 import Control.Monad                 (foldM)
+import Control.Monad.Fail            (MonadFail(fail))
 import Control.Monad.Reader          (MonadReader(ask,local), ReaderT(runReaderT))
 import Control.Monad.State           (StateT, put, get, modify)
 import Control.Monad.Trans           (MonadIO(liftIO))
@@ -23,9 +24,16 @@ import qualified Data.Text.Lazy      as TL
 import Happstack.Server              (Happstack, Input, ServerPartT)
 import HSP.XMLGenerator
 import HSP.XML
+import Prelude hiding (fail)
 import Text.Reform                   (CommonFormError, FormError(..))
 import Web.Plugins.Core              (Plugin(..), getConfig, getPluginsSt, getPluginRouteFn)
 import Web.Routes                    (RouteT(..), showURL, withRouteT)
+
+instance MonadFail m => MonadFail (ClckT url m) where
+    fail = lift . fail
+
+instance MonadFail (ServerPartT IO) where
+    fail = lift . fail
 
 data PageConfig = PageConfig
     { pageState        :: AcidState PageState
@@ -62,7 +70,7 @@ flattenURLClckT showClckURL m = ClckT $ withRouteT flattenURL $ unClckT m
     where
       flattenURL _ = \u p -> showClckURL u p
 
-clckT2PageT :: (Functor m, MonadIO m, Typeable url1) =>
+clckT2PageT :: (Functor m, MonadIO m, MonadFail m, Typeable url1) =>
              ClckT url1 m a
           -> PageT m a
 clckT2PageT m =
@@ -110,7 +118,7 @@ instance (IsName n TL.Text) => EmbedAsAttr PageM (Attr n ClckURL) where
 
 -- | convert 'Markup' to 'Content' that can be embedded. Generally by running the pre-processors needed.
 -- markupToContent :: (Functor m, MonadIO m, Happstack m) => Markup -> ClckT url m Content
-markupToContent :: (Functor m, MonadIO m, Happstack m) =>
+markupToContent :: (Functor m, MonadIO m, MonadFail m, Happstack m) =>
                    Markup
                 -> ClckT url m Content
 markupToContent Markup{..} =

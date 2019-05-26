@@ -28,6 +28,7 @@ import Clckwrks.Page.Types  ( PublishStatus )
 import Clckwrks.Page.URL    ( PageURL(ViewPageSlug))
 import Clckwrks.URL         (ClckURL(..))
 import Control.Applicative  ((<$>))
+import Control.Monad.Fail   (MonadFail)
 import Control.Monad.State  (get)
 import Control.Monad.Trans  (MonadIO)
 import qualified Data.Text  as T
@@ -90,7 +91,7 @@ getPageSummary pid =
 getBlogTitle :: PageM T.Text
 getBlogTitle = query GetBlogTitle
 
-extractExcerpt :: (MonadIO m, Functor m, Happstack m) =>
+extractExcerpt :: (MonadIO m, MonadFail m, Functor m, Happstack m) =>
                   Page
                -> ClckT url m Content
 extractExcerpt Page{..} =
