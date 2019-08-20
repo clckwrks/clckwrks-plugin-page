@@ -1,5 +1,5 @@
 name:                clckwrks-plugin-page
-version:             0.4.3.17
+version:             0.4.3.18
 synopsis:            support for CMS/Blogging in clckwrks
 description:         This provides two similar concepts Pages and Posts. Both allow
                      you to create page content by editting pages in the browser. A Post
@@ -49,7 +49,7 @@ library
                        acid-state             >= 0.12 && < 0.16,
                        aeson                  (>= 0.4  && < 0.10) || (>= 0.11 && < 1.5),
                        attoparsec             >= 0.10 && < 0.14,
-                       clckwrks               >= 0.24 && < 0.26,
+                       clckwrks               >= 0.25 && < 0.26,
                        containers             >= 0.4  && < 0.7,
                        directory              >= 1.1  && < 1.4,
                        filepath               >= 1.2  && < 1.5,

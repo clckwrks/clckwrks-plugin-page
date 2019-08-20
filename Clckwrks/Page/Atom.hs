@@ -2,9 +2,10 @@
 module Clckwrks.Page.Atom where
 
 import Control.Monad.Trans     (lift, liftIO)
+import Clckwrks.Authenticate.API (Username(..), getUsername)
 import Clckwrks.Monad          (Clck, Content(..), query, withAbs)
 import Clckwrks.Page.Acid
-import Clckwrks.Page.Monad     (PageM, markupToContent)
+import Clckwrks.Page.Monad     (PageM, markupToContent, clckT2PageT)
 import Clckwrks.Page.Types
 import Clckwrks.ProfileData.Acid
 import Clckwrks.Page.URL
@@ -67,10 +68,10 @@ entry Page{..} =
     where
       author :: XMLGenT PageM XML
       author =
-          do mu <- query $ UsernameForId pageAuthor
+          do mu <- lift $ clckT2PageT ((getUsername pageAuthor) :: Clck () (Maybe Username))
              case mu of
                Nothing -> return $ cdata ""
-               (Just n)
+               (Just (Username n))
                    | Text.null n ->
                        return $ cdata ""
                    | otherwise -> [hsx|
