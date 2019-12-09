@@ -1,5 +1,5 @@
 name:                clckwrks-plugin-page
-version:             0.4.3.18
+version:             0.4.3.19
 synopsis:            support for CMS/Blogging in clckwrks
 description:         This provides two similar concepts Pages and Posts. Both allow
                      you to create page content by editting pages in the browser. A Post
@@ -13,7 +13,7 @@ maintainer:          jeremy@n-heptane.com
 category:            Clckwrks
 build-type:          Custom
 cabal-version:       >=1.8
-tested-with:         GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.1, GHC == 8.6.3
+tested-with:         GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.1, GHC == 8.6.3, GHC == 8.8.1
 
 source-repository head
     type:     git
@@ -45,8 +45,8 @@ library
                        Clckwrks.Page.Atom
   other-modules:
                        Clckwrks.Page.Verbatim
-  build-depends:       base                   >= 4.3 && < 4.13,
-                       acid-state             >= 0.12 && < 0.16,
+  build-depends:       base                   >= 4.3 && < 4.14,
+                       acid-state             >= 0.12 && < 0.17,
                        aeson                  (>= 0.4  && < 0.10) || (>= 0.11 && < 1.5),
                        attoparsec             >= 0.10 && < 0.14,
                        clckwrks               >= 0.25 && < 0.26,
@@ -54,7 +54,7 @@ library
                        directory              >= 1.1  && < 1.4,
                        filepath               >= 1.2  && < 1.5,
                        happstack-hsp          >= 7.2  && < 7.5,
-                       happstack-server       >= 7.0  && < 7.6,
+                       happstack-server       >= 7.0  && < 7.7,
                        hsp                    >= 0.9  && < 0.11,
                        hsx2hs                 >= 0.13 && < 0.15,
                        ixset                  >= 1.0  && < 1.2,
@@ -69,7 +69,7 @@ library
                        text                   >= 0.11 && < 1.3,
                        time                   >= 1.4  && < 1.10,
                        time-locale-compat     >= 0.1  && < 0.2,
-                       template-haskell       >= 2.7  && <= 2.15,
+                       template-haskell       >= 2.7  && <= 2.16,
                        uuid                   >= 1.2  && <= 1.4,
                        uuid-orphans           >= 1.2  && < 1.5,
                        web-plugins            == 0.2.*,

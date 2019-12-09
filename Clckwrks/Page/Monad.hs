@@ -29,12 +29,6 @@ import Text.Reform                   (CommonFormError, FormError(..))
 import Web.Plugins.Core              (Plugin(..), getConfig, getPluginsSt, getPluginRouteFn)
 import Web.Routes                    (RouteT(..), showURL, withRouteT)
 
-instance MonadFail m => MonadFail (ClckT url m) where
-    fail = lift . fail
-
-instance MonadFail (ServerPartT IO) where
-    fail = lift . fail
-
 data PageConfig = PageConfig
     { pageState        :: AcidState PageState
     , pageClckURL      :: ClckURL -> [(T.Text, Maybe T.Text)] -> T.Text
