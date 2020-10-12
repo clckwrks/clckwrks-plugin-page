@@ -26,7 +26,7 @@ import qualified Data.Set           as Set
 import Happstack.Server             (ServerPartT, Response, notFound, toResponse)
 import System.Directory             (createDirectoryIfMissing)
 import System.FilePath              ((</>))
-import Web.Routes                   (toPathInfo, parseSegments, withRouteT, fromPathSegments)
+import Web.Routes                   (toPathSegments, parseSegments, withRouteT, fromPathSegments)
 import Web.Plugins.Core             (Plugin(..), Plugins(..), When(..), addCleanup, addHandler, addPostHook, initPlugin, getConfig, getPluginRouteFn)
 
 pageHandler :: (PageURL -> [(Text, Maybe Text)] -> Text)
@@ -96,11 +96,11 @@ migrateUACCT acidPageState =
 
 pagePlugin :: Plugin PageURL Theme (ClckT ClckURL (ServerPartT IO) Response) (ClckT ClckURL IO ()) ClckwrksConfig ClckPluginsSt
 pagePlugin = Plugin
-    { pluginName       = "page"
-    , pluginInit       = pageInit
-    , pluginDepends    = ["clck"]
-    , pluginToPathInfo = toPathInfo
-    , pluginPostHook   = addPageAdminMenu
+    { pluginName           = "page"
+    , pluginInit           = pageInit
+    , pluginDepends        = ["clck"]
+    , pluginToPathSegments = toPathSegments
+    , pluginPostHook       = addPageAdminMenu
     }
 
 plugin :: ClckPlugins -- ^ plugins
