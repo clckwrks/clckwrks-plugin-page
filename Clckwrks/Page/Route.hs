@@ -2,10 +2,12 @@
 module Clckwrks.Page.Route where
 
 import Clckwrks                     (Role(..), requiresRole_)
+import Clckwrks.AccessControl       (assertAccess)
+import Clckwrks.Authenticate.Plugin (getUserId)
 import Clckwrks.Monad               ( ClckState(plugins), query
                                     , update, setUnique, themeTemplate, nestURL
                                     )
-import Clckwrks.Page.Types          (Page(..), PageId(..), toSlug)
+import Clckwrks.Page.Types          (Page(..), PagePermission(EditAccess, ViewAccess), PageId(..), toSlug)
 import Clckwrks.Page.Acid           (GetPageTitle(..), IsPublishedPage(..), PageById(..))
 import Clckwrks.Page.Admin.EditFeedConfig (editFeedConfig)
 import Clckwrks.Page.Admin.EditPage (editPage)
@@ -35,11 +37,13 @@ checkAuth url =
     do showFn <- pageClckURL <$> ask
        let requiresRole = requiresRole_ showFn
        case url of
-         ViewPage{}     -> return url
-         ViewPageSlug{} -> return url
-         Blog{}         -> return url
-         AtomFeed{}     -> return url
-         PageAdmin {}   -> requiresRole (Set.singleton Administrator) url
+         (ViewPage pid)       -> do assertAccess pid ViewAccess
+                                    pure url
+         (ViewPageSlug pid _) -> do assertAccess pid ViewAccess
+                                    pure url
+         Blog              {} -> return url
+         AtomFeed          {} -> return url
+         PageAdmin         {} -> requiresRole (Set.singleton Administrator) url
 
 -- | routes for 'AdminURL'
 routePageAdmin :: PageAdminURL -> PageM Response

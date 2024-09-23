@@ -4,21 +4,27 @@ module Clckwrks.Page.Admin.EditPage
     ( editPage
     ) where
 
+import AccessControl.Relation  (Object(..), ObjectType(..), Relation(..), ToObject(toObject), RelationTuple(..), hasResource, hasRelation, hasSubjectType, ppRelationTuples, unObjectId)
 import Control.Applicative ((<$>), (<*>), (<*))
 import Clckwrks                hiding (transform)
+import Clckwrks.AccessControl  (AccessList(..), emptyAccessList)
 import Clckwrks.Admin.Template (template)
 import Clckwrks.Page.Monad          (PageM, PageForm, PageFormError(..))
 import Clckwrks.Page.Acid      (Markup(..), Page(..), PageKind(..), PublishStatus(..), PreProcessor(..), PageById(..), UpdatePage(..))
 import Clckwrks.Page.Types     (PageId(..), Slug(..), toSlug, slugify)
 import Clckwrks.Page.URL       (PageURL(..), PageAdminURL(..))
+import Clckwrks.Rebac.API      (getRelationTuples)
 import Control.Monad.State     (get)
-import Data.Maybe              (isJust, maybe)
+import Data.Maybe              (isJust, maybe, catMaybes)
+import Data.List               (sort)
 import qualified Data.Text     as Text
 import Data.Text.Lazy          (Text)
 import Data.Time.Clock         (getCurrentTime)
+import Debug.Trace             (trace)
 import HSP.XML
 import HSP.XMLGenerator
-import Text.Reform             ((<++), (++>), mapView, transformEitherM, transform, decimal)
+import Text.Read               (readMaybe)
+import Text.Reform             ((<++), (++>), mapView, transformEitherM, transformEither, transform, decimal)
 import Text.Reform.Happstack   (reform)
 import Text.Reform.HSP.Text    (form, button, inputCheckbox, inputText, labelText, inputSubmit, select, textarea, fieldset, ol, li, setAttrs)
 
@@ -27,9 +33,30 @@ data AfterSaveAction
     | VisitPage
     | ShowPreview
 
+relationTuplesToAccessList :: [ RelationTuple ] -> PageId -> AccessList
+relationTuplesToAccessList rts pid =
+  let pageTuples      = filter (\rt -> hasResource (toObject pid) rt && hasRelation (Relation "viewer") rt) rts
+      userTuples      = filter (hasSubjectType (ObjectType "user")) pageTuples
+      usergroupTuples = filter (hasSubjectType (ObjectType "usergroup")) pageTuples
+
+      userIds :: [ UserId ]
+      userIds = catMaybes $ map (fmap UserId . readMaybe . Text.unpack . unObjectId . objectId . subject) userTuples
+
+      usergroups :: [ Text.Text ]
+      usergroups = map (unObjectId . objectId . subject) usergroupTuples
+
+  in trace (show $ (ppRelationTuples userTuples, ppRelationTuples pageTuples, userIds)) $ (emptyAccessList { allowUserIds = userIds
+                                                                                                           , allowUsergroups = usergroups
+                                                                                                           })
+
 editPage :: PageURL -> PageId -> PageM Response
 editPage here pid =
     do mPage <- query $ PageById pid
+       eRelTups <- getRelationTuples
+       let relTups = case eRelTups of
+               (Left e) -> trace (show e) $ []
+               (Right t) -> t
+           acl    = relationTuplesToAccessList relTups pid
        case mPage of
          Nothing -> notFound $ toResponse $ "Page not found: " ++ show (unPageId pid)
          (Just page) ->
@@ -37,24 +64,31 @@ editPage here pid =
                 styles <- getThemeStyles =<< plugins <$> get
                 template "edit page" () $
                   <%>
-                   <% reform (form action) "ep" updatePage Nothing (pageFormlet styles page) %>
+                   <% reform (form action) "ep" updatePage Nothing (pageFormlet styles page acl) %>
                   </%>
     where
       updatePage :: (Page, AfterSaveAction) -> PageM Response
       updatePage (page, afterSaveAction) =
-          do update (UpdatePage page)
+          do -- liftIO $ print page
+             me <- update (UpdatePage page)
+             {-
+             case me of
+               (Just err) -> liftIO $ putStrLn err
+               Nothing    -> pure ()
+             -}
              case afterSaveAction of
                EditSomeMore -> seeOtherURL (PageAdmin $ EditPage    (pageId page))
                VisitPage    -> seeOtherURL (ViewPageSlug (pageId page) (toSlug (pageTitle page) (pageSlug page)))
                ShowPreview  -> seeOtherURL (PageAdmin $ PreviewPage (pageId page))
 
 
-pageFormlet :: [(ThemeStyleId, ThemeStyle)] -> Page -> PageForm (Page, AfterSaveAction)
-pageFormlet styles' page =
-    let styles = map (\(i, ts) -> (i, themeStyleName ts)) styles' in
+pageFormlet :: [(ThemeStyleId, ThemeStyle)] -> Page -> AccessList -> PageForm (Page, AfterSaveAction)
+pageFormlet styles' page acl =
+    let styles = map (\(i, ts) -> (i, themeStyleName ts)) styles'
+    in
     divHorizontal $
       (fieldset $
-        (,,,,,,)
+        (,,,,,,,)
                 <$> (divControlGroup (label' "Page Type"       ++> (divControls $ select [(PlainPage, ("page" :: Text)), (Post, "post")] (== (pageKind page)))))
 --                <*> (divControlGroup (label' "Theme Style"     ++> (divControls $ ThemeStyleId <$> (select styles (const True)) `transform` (decimal (const PageErrorInternal)))))
                 <*> (divControlGroup (label' "Theme Style"     ++> (divControls $ select styles (== (pageThemeStyleId page)))))
@@ -62,6 +96,7 @@ pageFormlet styles' page =
                 <*> (divControlGroup (label' "Slug (optional)" ++> (divControls $ inputText (maybe Text.empty unSlug $ pageSlug page) `setAttrs` [("size" := "80"), ("class" := "input-xxlarge")  :: Attr Text Text])))
                 <*> divControlGroup (label' "Markdown processor" ++> (divControls $ select [(Pandoc, "Pandoc"), (Markdown, "markdown perl script (legacy)" :: Text), (HsColour, "markdown perl script + hscolour (legacy)")] (\p -> p `elem` (preProcessors $ pageSrc page))))
                 <*> (divControlGroup (label' "Body"            ++> (divControls $ textarea 80 25 (markup (pageSrc page)) `setAttrs` [("class" := "input-xxlarge")  :: Attr Text Text])))
+                <*> pure acl -- accessControlListFormlet acl
                 <*> (divFormActions
                       ((,,) <$> (inputSubmit' (Text.pack "Save"))
                             <*> (inputSubmit'  (Text.pack "Preview") `setAttrs` (("class" := "btn btn-info")  :: Attr Text Text))
@@ -90,10 +125,39 @@ pageFormlet styles' page =
       newPublishStatus :: PublishStatus -> PageForm (Maybe PublishStatus)
       newPublishStatus Published = fmap (const Draft)     <$> (inputSubmit' (Text.pack "Unpublish") `setAttrs` [("class" := "btn btn-warning") :: Attr Text Text])
       newPublishStatus _         = fmap (const Published) <$> (inputSubmit' (Text.pack "Publish")   `setAttrs` [("class" := "btn btn-success") :: Attr Text Text])
+
+      inputTextCommaSeparated :: [Text.Text] -> PageForm [Text.Text]
+      inputTextCommaSeparated txts =
+          let withCommas   = Text.intercalate ", "txts
+              removeCommas :: Text.Text -> [Text.Text]
+              removeCommas = fmap Text.strip . Text.splitOn ","
+          in fmap removeCommas (inputText withCommas)
+
+      accessControlListFormlet :: AccessList -> PageForm AccessList
+      accessControlListFormlet (AccessList allowAnonymous allowUserIds allowUsergroups) =
+         let showUserId (UserId i) = Text.pack (show i)
+             parseUserIds :: [Text.Text] -> Either PageFormError [UserId]
+             parseUserIds [] = Right []
+             parseUserIds (t:txts) =
+                case parseUserId t of
+                  (Left e) -> Left e
+                  (Right uid) ->
+                    case parseUserIds txts of
+                      (Left e) -> Left e
+                      (Right uids) -> Right (uid : uids)
+
+             parseUserId txt =
+                 case readMaybe (Text.unpack txt) of
+                  Nothing  -> Left (PageParseError $ "can not parse as userid -> " <> txt)
+                  (Just i) -> Right (UserId i)
+         in         AccessList <$> (divControlGroup (label' "Anonymous" ++> (divControls $ inputCheckbox allowAnonymous)))
+                               <*> (divControlGroup (label' "users"     ++> (divControls $ inputTextCommaSeparated (sort $ map showUserId allowUserIds) `transformEither` parseUserIds)))
+                               <*> (divControlGroup (label' "groups"    ++> (divControls $ inputTextCommaSeparated (sort $ allowUsergroups))))
+
       toPage :: (MonadIO m) =>
-                (PageKind, ThemeStyleId, Text.Text, Text.Text, PreProcessor, Text.Text, (Maybe Text.Text, Maybe Text.Text, Maybe PublishStatus))
+                (PageKind, ThemeStyleId, Text.Text, Text.Text, PreProcessor, Text.Text, AccessList, (Maybe Text.Text, Maybe Text.Text, Maybe PublishStatus))
              -> m (Either PageFormError (Page, AfterSaveAction))
-      toPage (kind, style, ttl, slug, markup, bdy, (msave, mpreview, mpagestatus)) =
+      toPage (kind, style, ttl, slug, markup, bdy, al, (msave, mpreview, mpagestatus)) =
           do now <- liftIO $ getCurrentTime
              return $ Right $
                ( Page { pageId      = pageId page

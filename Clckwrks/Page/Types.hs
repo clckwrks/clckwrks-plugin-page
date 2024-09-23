@@ -1,7 +1,10 @@
-{-# LANGUAGE DeriveDataTypeable, FlexibleInstances, TemplateHaskell, TypeFamilies, OverloadedStrings #-}
+{-# LANGUAGE DeriveDataTypeable, FlexibleInstances, MultiParamTypeClasses, TemplateHaskell, TypeFamilies, OverloadedStrings #-}
 module Clckwrks.Page.Types where
 
+import AccessControl.Relation   (Object(..), ObjectId(..), ObjectType(..), ToObject(..))
+import AccessControl.Schema     (KnownPermission(..), Permission(..), ToPermission(..))
 import Clckwrks                 (UserId(..))
+import Clckwrks.AccessControl   (AccessList(..), emptyAccessList)
 import Clckwrks.Markup.HsColour (hscolour)
 import Clckwrks.Markup.Markdown (markdown)
 import Clckwrks.Markup.Pandoc   (pandoc)
@@ -20,11 +23,11 @@ import Data.Text                (Text)
 import qualified Data.Text      as Text
 import Data.Time                (UTCTime)
 import Data.Time.Clock.POSIX    (posixSecondsToUTCTime)
+import Data.UserId              (UserId(..))
 import Data.UUID                (UUID)
 import Data.UUID.V5             (generateNamed, namespaceOID)
 import Web.Routes               (PathInfo(..), anySegment)
 import System.Random            (randomIO)
-
 
 -- $(deriveSafeCopy 0 'base ''UUID)
 
@@ -40,6 +43,20 @@ instance ToJSON PageId where
     toJSON (PageId i) = toJSON i
 instance FromJSON PageId where
     parseJSON n = PageId <$> parseJSON n
+
+instance ToObject PageId where
+  toObject (PageId i) = Object (ObjectType "page") (ObjectId $ Text.pack $ show i)
+
+data PagePermission
+  = ViewAccess
+  | EditAccess
+  deriving (Eq, Ord, Read, Show, Data, Typeable)
+
+instance ToPermission PagePermission where
+  toPermission ViewAccess = Permission "view"
+  toPermission EditAccess = Permission "edit"
+
+instance KnownPermission PageId PagePermission (Maybe UserId)
 
 data PreProcessor_1
     = HsColour_1
@@ -191,6 +208,19 @@ instance Migrate Page_3 where
     migrate (Page_002 pi pa pt ps pe pd pu pst pk puu) =
         (Page_3 pi pa pt Nothing ps pe pd pu pst pk puu)
 
+{-
+How do we define access control for a page?
+
+At the moment, everyone can access a published page. But we likely want to have some pages protected with access control.
+
+The REBAC allows us to create very fined grained permissions. We could for each page create an explicit relation for each individual who is allowed to access that page. But that would get tedious pretty quick.
+
+We'd like a way in the admin interface to more easily select who can access a page.
+
+It does seem like much of the control and flexibility should exist within the schema.
+
+How groups are organized and how someone becomes part of a group needs to be flexible. For example, for a subscriber model is likely to requirement a payment plugine like clckwrks-plugin-stripe. But this module doesn't know anything about stripe.
+-}
 data Page
     = Page { pageId           :: PageId
            , pageAuthor       :: UserId
@@ -205,7 +235,7 @@ data Page
            , pageUUID         :: UUID
            , pageThemeStyleId :: ThemeStyleId
            }
-      deriving (Eq, Ord, Read, Show, Data, Typeable)
+    deriving (Eq, Ord, Read, Show, Data, Typeable)
 $(deriveSafeCopy 4 'extension ''Page)
 
 -- migration added for clckwrks-plugin-page-0.3.0 on 2013-12-26
@@ -213,7 +243,31 @@ instance Migrate Page where
     type MigrateFrom Page = Page_3
     migrate (Page_3 pi pa pt psl ps pe pd pu pst pk puu) =
         (Page pi pa pt psl ps pe pd pu pst pk puu (ThemeStyleId 0))
+{-
+data Page
+    = Page { pageId           :: PageId
+           , pageAuthor       :: UserId
+           , pageTitle        :: Text
+           , pageSlug         :: Maybe Slug
+           , pageSrc          :: Markup
+           , pageExcerpt      :: Maybe Markup
+           , pageDate         :: UTCTime
+           , pageUpdated      :: UTCTime
+           , pageStatus       :: PublishStatus
+           , pageKind         :: PageKind
+           , pageUUID         :: UUID
+           , pageThemeStyleId :: ThemeStyleId
+           , pageAccessList   :: AccessList
+           }
+      deriving (Eq, Ord, Read, Show, Data, Typeable)
+$(deriveSafeCopy 5 'extension ''Page)
 
+
+instance Migrate Page where
+    type MigrateFrom Page = Page_4
+    migrate (Page_4 pi pa pt psl ps pe pd pu pst pk puu ts) =
+            (Page   pi pa pt psl ps pe pd pu pst pk puu ts emptyAccessList)
+-}
 instance Indexable Page where
     empty = ixSet [ ixFun ((:[]) . pageId)
                   , ixFun ((:[]) . pageDate)

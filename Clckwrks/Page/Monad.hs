@@ -79,6 +79,7 @@ clckT2PageT m =
 
 data PageFormError
     = PageCFE (CommonFormError [Input])
+    | PageParseError T.Text
     | PageErrorInternal
       deriving Show
 

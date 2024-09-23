@@ -21,6 +21,7 @@ module Clckwrks.Page.Acid
     ) where
 
 import Clckwrks             (UserId(..))
+import Clckwrks.AccessControl (AccessList(..), emptyAccessList)
 import Clckwrks.Page.Types  (Markup(..), PublishStatus(..), PreProcessor(..), PageId(..), PageKind(..), Page(..), Pages(..), FeedConfig(..), Slug(..), initialFeedConfig, slugify)
 import Clckwrks.Page.Verbatim (verbatimText)
 import Clckwrks.Types       (Trust(..))
