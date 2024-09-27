@@ -26,7 +26,7 @@ import HSP.XMLGenerator
 import Text.Read               (readMaybe)
 import Text.Reform             ((<++), (++>), mapView, transformEitherM, transformEither, transform, decimal)
 import Text.Reform.Happstack   (reform)
-import Text.Reform.HSP.Text    (form, button, inputCheckbox, inputText, labelText, inputSubmit, select, textarea, fieldset, ol, li, setAttrs)
+import Text.Reform.HSP.Text    (errorList, form, button, inputCheckbox, inputText, labelText, inputSubmit, select, textarea, fieldset, ol, li, setAttrs)
 
 data AfterSaveAction
     = EditSomeMore
@@ -85,8 +85,8 @@ editPage here pid =
 pageFormlet :: [(ThemeStyleId, ThemeStyle)] -> Page -> AccessList -> PageForm (Page, AfterSaveAction)
 pageFormlet styles' page acl =
     let styles = map (\(i, ts) -> (i, themeStyleName ts)) styles'
-    in
-    divHorizontal $
+    in errorList ++>
+    (divHorizontal $
       (fieldset $
         (,,,,,,,)
                 <$> (divControlGroup (label' "Page Type"       ++> (divControls $ select [(PlainPage, ("page" :: Text)), (Post, "post")] (== (pageKind page)))))
@@ -96,12 +96,12 @@ pageFormlet styles' page acl =
                 <*> (divControlGroup (label' "Slug (optional)" ++> (divControls $ inputText (maybe Text.empty unSlug $ pageSlug page) `setAttrs` [("size" := "80"), ("class" := "input-xxlarge")  :: Attr Text Text])))
                 <*> divControlGroup (label' "Markdown processor" ++> (divControls $ select [(Pandoc, "Pandoc"), (Markdown, "markdown perl script (legacy)" :: Text), (HsColour, "markdown perl script + hscolour (legacy)")] (\p -> p `elem` (preProcessors $ pageSrc page))))
                 <*> (divControlGroup (label' "Body"            ++> (divControls $ textarea 80 25 (markup (pageSrc page)) `setAttrs` [("class" := "input-xxlarge")  :: Attr Text Text])))
-                <*> pure acl -- accessControlListFormlet acl
+                <*> (accessControlListFormlet acl)
                 <*> (divFormActions
                       ((,,) <$> (inputSubmit' (Text.pack "Save"))
                             <*> (inputSubmit'  (Text.pack "Preview") `setAttrs` (("class" := "btn btn-info")  :: Attr Text Text))
                             <*> newPublishStatus (pageStatus page)))
-      ) `transformEitherM` toPage
+      ) `transformEitherM` toPage)
 
     where
       inputSubmit' :: Text.Text -> PageForm (Maybe Text.Text)
@@ -138,14 +138,16 @@ pageFormlet styles' page acl =
          let showUserId (UserId i) = Text.pack (show i)
              parseUserIds :: [Text.Text] -> Either PageFormError [UserId]
              parseUserIds [] = Right []
+             parseUserIds (t:txts) | Text.null t = parseUserIds txts
              parseUserIds (t:txts) =
                 case parseUserId t of
-                  (Left e) -> Left e
+                  (Left e) -> error $ (show e)
                   (Right uid) ->
                     case parseUserIds txts of
-                      (Left e) -> Left e
+                      (Left e) -> error $ (show e)
                       (Right uids) -> Right (uid : uids)
 
+             parseUserId :: Text.Text -> Either PageFormError UserId
              parseUserId txt =
                  case readMaybe (Text.unpack txt) of
                   Nothing  -> Left (PageParseError $ "can not parse as userid -> " <> txt)
@@ -158,7 +160,8 @@ pageFormlet styles' page acl =
                 (PageKind, ThemeStyleId, Text.Text, Text.Text, PreProcessor, Text.Text, AccessList, (Maybe Text.Text, Maybe Text.Text, Maybe PublishStatus))
              -> m (Either PageFormError (Page, AfterSaveAction))
       toPage (kind, style, ttl, slug, markup, bdy, al, (msave, mpreview, mpagestatus)) =
-          do now <- liftIO $ getCurrentTime
+          do -- liftIO $ putStrLn $ "al = " ++ show al
+             now <- liftIO $ getCurrentTime
              return $ Right $
                ( Page { pageId      = pageId page
                       , pageAuthor  = pageAuthor page
