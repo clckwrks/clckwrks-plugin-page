@@ -1,10 +1,10 @@
-{-# LANGUAGE QuasiQuotes, OverloadedStrings #-}
+{-# LANGUAGE DataKinds, QuasiQuotes, OverloadedStrings #-}
 {-# OPTIONS_GHC -F -pgmFhsx2hs #-}
 module Clckwrks.Page.Admin.EditPage
     ( editPage
     ) where
 
-import AccessControl.Relation  (Object(..), ObjectType(..), Relation(..), ToObject(toObject), RelationTuple(..), hasResource, hasRelation, hasSubjectType, ppRelationTuples, unObjectId)
+import AccessControl.Relation  (Object(..), ObjectType(..), Relation(..), ToObject(toObject), RelationTuple(..), ObjectWildcard(..), WildcardObjectId(Wildcard), toNoWildcard, hasResource, hasRelation, hasSubjectType, ppRelationTuples, unObjectId)
 import Control.Applicative ((<$>), (<*>), (<*))
 import Clckwrks                hiding (transform)
 import Clckwrks.AccessControl  (AccessList(..), emptyAccessList)
@@ -16,7 +16,7 @@ import Clckwrks.Page.URL       (PageURL(..), PageAdminURL(..))
 import Clckwrks.Rebac.API      (getRelationTuples)
 import Control.Monad.State     (get)
 import Data.Maybe              (isJust, maybe, catMaybes)
-import Data.List               (sort)
+import Data.List               (sort, find)
 import qualified Data.Text     as Text
 import Data.Text.Lazy          (Text)
 import Data.Time.Clock         (getCurrentTime)
@@ -40,12 +40,19 @@ relationTuplesToAccessList rts pid =
       usergroupTuples = filter (hasSubjectType (ObjectType "usergroup")) pageTuples
 
       userIds :: [ UserId ]
-      userIds = catMaybes $ map (fmap UserId . readMaybe . Text.unpack . unObjectId . objectId . subject) userTuples
+      userIds =
+        let subjects = catMaybes (map (toNoWildcard . subject) userTuples) :: [ Object NoWildcard ]
+        in catMaybes $ map (fmap UserId . readMaybe . Text.unpack . unObjectId . objectId) subjects
 
       usergroups :: [ Text.Text ]
-      usergroups = map (unObjectId . objectId . subject) usergroupTuples
+      usergroups =
+        let subjects = catMaybes (map (toNoWildcard . subject) usergroupTuples)
+        in map (unObjectId . objectId) subjects
 
-  in trace (show $ (ppRelationTuples userTuples, ppRelationTuples pageTuples, userIds)) $ (emptyAccessList { allowUserIds = userIds
+      aa = isJust $ find (\(RelationTuple _ _ (Object _ si) Nothing _) -> si == Wildcard) userTuples
+
+  in trace (show $ (ppRelationTuples userTuples, ppRelationTuples pageTuples, userIds)) $ (emptyAccessList { allowAny = aa
+                                                                                                           , allowUserIds = userIds
                                                                                                            , allowUsergroups = usergroups
                                                                                                            })
 
@@ -134,7 +141,7 @@ pageFormlet styles' page acl =
           in fmap removeCommas (inputText withCommas)
 
       accessControlListFormlet :: AccessList -> PageForm AccessList
-      accessControlListFormlet (AccessList allowAnonymous allowUserIds allowUsergroups) =
+      accessControlListFormlet (AccessList allowAny allowUserIds allowUsergroups) =
          let showUserId (UserId i) = Text.pack (show i)
              parseUserIds :: [Text.Text] -> Either PageFormError [UserId]
              parseUserIds [] = Right []
@@ -152,7 +159,7 @@ pageFormlet styles' page acl =
                  case readMaybe (Text.unpack txt) of
                   Nothing  -> Left (PageParseError $ "can not parse as userid -> " <> txt)
                   (Just i) -> Right (UserId i)
-         in         AccessList <$> (divControlGroup (label' "Anonymous" ++> (divControls $ inputCheckbox allowAnonymous)))
+         in         AccessList <$> (divControlGroup (label' "public" ++> (divControls $ inputCheckbox allowAny)))
                                <*> (divControlGroup (label' "users"     ++> (divControls $ inputTextCommaSeparated (sort $ map showUserId allowUserIds) `transformEither` parseUserIds)))
                                <*> (divControlGroup (label' "groups"    ++> (divControls $ inputTextCommaSeparated (sort $ allowUsergroups))))
 
