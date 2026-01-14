@@ -22,7 +22,9 @@ import Clckwrks.Page.URL            (PageURL(..), PageAdminURL(..))
 import Control.Applicative          ((<$>))
 import Control.Monad.Reader         (ask)
 import Control.Monad.State          (get)
+import Control.Monad.Trans          (liftIO)
 import Data.Text                    (Text)
+import Data.Time.Clock.POSIX        (getPOSIXTime)
 import qualified Data.Set           as Set
 import Happstack.Server             ( Response, Happstack, escape, notFound, toResponse
                                     , ok, internalServerError
@@ -37,9 +39,11 @@ checkAuth url =
     do showFn <- pageClckURL <$> ask
        let requiresRole = requiresRole_ showFn
        case url of
-         (ViewPage pid)       -> do assertAccess pid ViewAccess
+         (ViewPage pid)       -> do now <- liftIO getPOSIXTime
+                                    assertAccess pid ViewAccess (Just now)
                                     pure url
-         (ViewPageSlug pid _) -> do assertAccess pid ViewAccess
+         (ViewPageSlug pid _) -> do now <- liftIO getPOSIXTime
+                                    assertAccess pid ViewAccess (Just now)
                                     pure url
          Blog              {} -> return url
          AtomFeed          {} -> return url

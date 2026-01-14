@@ -49,7 +49,7 @@ relationTuplesToAccessList rts pid =
         let subjects = catMaybes (map (toNoWildcard . subject) usergroupTuples)
         in map (unObjectId . objectId) subjects
 
-      aa = isJust $ find (\(RelationTuple _ _ (Object _ si) Nothing _) -> si == Wildcard) userTuples
+      aa = isJust $ find (\(RelationTuple _ _ (Object _ si) Nothing _mTag _mExpiration) -> si == Wildcard) userTuples
 
   in trace (show $ (ppRelationTuples userTuples, ppRelationTuples pageTuples, userIds)) $ (emptyAccessList { allowAny = aa
                                                                                                            , allowUserIds = userIds
